@@ -1,0 +1,37 @@
+{
+    "name": "spojenet/abraflexi-ipex",
+    "description": "Ipex ⛗ AbraFlexi integration",
+    "type": "project",
+    "require": {
+        "mpdf/mpdf": "^8.2",
+        "spojenet/flexibee": "^3.3",
+        "spojenet/ipexb2b": "dev-main",
+        "vitexsoftware/ease-html":  "^1.40"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "SpojeNet\\AbraFlexiIpex\\": "src/AbraFlexiIpex/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Vítězslav Dvořák",
+            "email": "vitezslav.dvorak@spojenet.cz"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "phpstan/phpstan": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.61",
+        "ergebnis/composer-normalize": "^2.43",
+        "ergebnis/php-cs-fixer-config": "^6.34",
+        "phpstan/phpstan-phpunit": "2.0.x-dev"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true
+        }
+    }
+}
