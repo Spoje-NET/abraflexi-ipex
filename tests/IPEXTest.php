@@ -13,15 +13,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Test\SpojeNet\System;
+namespace Test\SpojeNet\AbraFlexiIpex;
 
 use PHPUnit\Framework\TestCase;
-use SpojeNet\System\IPEX;
+use SpojeNet\AbraFlexiIpex\IPEX;
 
 /**
  * Class IPEX.
  *
- * @covers \SpojeNet\System\IPEX
+ * @covers \SpojeNet\AbraFlexiIpex\IPEX
  */
 class IPEXTest extends TestCase
 {
@@ -40,7 +40,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::getIpexInvoices
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::getIpexInvoices
      */
     public function testGetIpexInvoices(): void
     {
@@ -48,7 +48,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::processIpexInvoices
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::processIpexInvoices
      */
     public function testProcessIpexInvoices(): void
     {
@@ -57,7 +57,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::getUnivoicedCalls
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::getUnivoicedCalls
      */
     public function testGetUnivoicedCalls(): void
     {
@@ -66,7 +66,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::getUsersPreparedOrders
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::getUsersPreparedOrders
      */
     public function testGetUsersPreparedOrders(): void
     {
@@ -75,7 +75,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::foundLastInvoice
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::foundLastInvoice
      */
     public function testFoundLastInvoice(): void
     {
@@ -84,7 +84,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::uninvoicedAmount
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::uninvoicedAmount
      */
     public function testUninvoicedAmount(): void
     {
@@ -93,7 +93,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::createOrder
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::createOrder
      */
     public function testCreateOrder(): void
     {
@@ -102,7 +102,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::pdfCallLog
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::pdfCallLog
      */
     public function testPdfCallLog(): void
     {
@@ -111,7 +111,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::addCallLogAsItems
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::addCallLogAsItems
      */
     public function testAddCallLogAsItems(): void
     {
@@ -120,7 +120,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::sendOrderByMail
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::sendOrderByMail
      */
     public function testSendOrderByMail(): void
     {
@@ -129,7 +129,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::noIpexExtID
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::noIpexExtID
      */
     public function testNoIpexExtID(): void
     {
@@ -138,7 +138,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::createInvoice
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::createInvoice
      */
     public function testCreateInvoice(): void
     {
@@ -147,7 +147,7 @@ class IPEXTest extends TestCase
     }
 
     /**
-     * @covers \SpojeNet\System\IPEX::getInvoicer
+     * @covers \SpojeNet\AbraFlexiIpex\IPEX::getInvoicer
      */
     public function testGetInvoicer(): void
     {

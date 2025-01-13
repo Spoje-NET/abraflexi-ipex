@@ -25,8 +25,8 @@ class CallsListing extends \Ease\Html\TableTag
     /**
      * Calls Listing table.
      *
-     * @param array $calls
-     * @param array $properties
+     * @param array<int, array<string, int|string>> $calls
+     * @param array<string, string>                 $properties
      */
     public function __construct($calls = null, $properties = [])
     {
@@ -38,9 +38,9 @@ class CallsListing extends \Ease\Html\TableTag
     }
 
     /**
-     * @param array $calls
+     * @param array<int, array<string, int|string>> $calls
      */
-    public function populate($calls): void
+    public function populate(/* array */ $calls) // : self
     {
         // cislo_int
         // cislo_ext
@@ -86,16 +86,16 @@ class CallsListing extends \Ease\Html\TableTag
                 $callData['sazba_dph'],
             ]);
         }
+
+        return $this;
     }
 
     /**
      * Seconds to human readable.
      *
-     * @param long $duration
-     *
-     * @return string
+     * @param float|int $duration
      */
-    public function secsToStr($duration)
+    public function secsToStr($duration): string
     {
         $periods = [
             _('day') => 86400,
@@ -109,11 +109,11 @@ class CallsListing extends \Ease\Html\TableTag
         foreach ($periods as $name => $dur) {
             $div = floor($duration / $dur);
 
-            if ($div === 0) {
+            if ($div == 0) {
                 continue;
             }
 
-            if ($div === 1) {
+            if ($div == 1) {
                 $parts[] = $div.' '.$name;
             } else {
                 $parts[] = $div.' '.$name.'s';

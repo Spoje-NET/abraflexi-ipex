@@ -15,21 +15,23 @@ declare(strict_types=1);
 
 namespace SpojeNet\AbraFlexiIpex;
 
+use Ease\Shared;
+
 require_once '../vendor/autoload.php';
 \define('EASE_APPNAME', 'IPEXPostPaid');
-
+$exitcode = 0;
 /**
  * Get today's Statements list.
  */
 $options = getopt('o::e::', ['output::environment::']);
-\Ease\Shared::init(
+Shared::init(
     [
         'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
         'ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY',
     ],
     \array_key_exists('environment', $options) ? $options['environment'] : '../.env',
 );
-$destination = \array_key_exists('output', $options) ? $options['output'] : \Ease\Shared::cfg('RESULT_FILE', 'php://stdout');
+$destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
 
 $defaultLocale = 'cs_CZ';
 setlocale(\LC_ALL, $defaultLocale);
@@ -37,7 +39,7 @@ putenv("LC_ALL={$defaultLocale}");
 
 $ipexer = new \SpojeNet\AbraFlexiIpex\Ipex();
 
-if (\Ease\Shared::cfg('APP_DEBUG', false)) {
+if (Shared::cfg('APP_DEBUG', false)) {
     $ipexer->logBanner();
 }
 

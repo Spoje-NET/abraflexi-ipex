@@ -13,7 +13,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SpojeNet\System;
+namespace SpojeNet\AbraFlexiIpex;
+
+use Ease\Mailer;
+use Ease\Shared;
+use SpojeNet\AbraFlexiIpex\CallsListing;
 
 require_once '../vendor/autoload.php';
 
@@ -23,14 +27,14 @@ require_once '../vendor/autoload.php';
  * Get today's Statements list.
  */
 $options = getopt('o::e::', ['output::environment::']);
-\Ease\Shared::init(
+Shared::init(
     [
         'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
         'ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY',
     ],
     \array_key_exists('environment', $options) ? $options['environment'] : '../.env',
 );
-$destination = \array_key_exists('output', $options) ? $options['output'] : \Ease\Shared::cfg('RESULT_FILE', 'php://stdout');
+$destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
 
 $defaultLocale = 'cs_CZ';
 setlocale(\LC_ALL, $defaultLocale);
@@ -52,7 +56,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
 
     if ($adresar->recordExists($klientExtID)) {
         $adresar->loadFromAbraFlexi($klientExtID);
-        $email = Mailer::getNotificationEmailAddres($adresar);
+        $email = $adresar->getEmail();
         $startDate = \IPEXB2B\ApiClient::ipexDateTimeToDateTime($invoiceRaw['dateStart']);
         $endDate = \IPEXB2B\ApiClient::ipexDateTimeToDateTime($invoiceRaw['dateEnd']);
 
@@ -73,7 +77,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
             );
             $report = new \Ease\Container(new \Ease\Html\H2Tag('Calls listing'));
             $report->addItem(new \Ease\Html\PTag($range));
-            $report->addItem(new ui\CallsListing(
+            $report->addItem(new CallsListing(
                 $calls,
                 ['style' => 'font-size: small'],
             ));
