@@ -99,7 +99,7 @@ class Ipex extends \Ease\Sand
         foreach ($this->getUsersPreparedOrders($klientExtID) as $order) {
             if (!empty($order['polozkyDokladu'])) {
                 foreach ($order['polozkyDokladu'] as $orderItem) {
-                    if ($orderItem['kod'] === \Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')) {
+                    if ($orderItem['kod'] === \AbraFlexi\Functions::uncode(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'))) {
                         $ipexOrders[$order['kod']] = $order;
                     }
                 }
@@ -207,7 +207,7 @@ class Ipex extends \Ease\Sand
         $pricelistItem = [
             'cenaMj' => $invoiceRaw['price'],
             'nazev' => 'Telefonní služby od '.self::formatDate($startDate).' do '.self::formatDate($endDate),
-            'cenik' => \AbraFlexi\Functions::code('IPEX_POSTPAID'),
+            'cenik' => \AbraFlexi\Functions::code( \Ease\Shared::cfg( 'ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID' ) ),
             'stitky' => 'API_IPEX',
         ];
         $order->setDataValue('popis', $pricelistItem['nazev']);
@@ -220,7 +220,7 @@ class Ipex extends \Ease\Sand
                 $order->sync() ? 'success' : 'error',
             );
 
-            $pdfCallLog = $this->pdfCallLog($invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
+            $pdfCallLog = $this->pdfCallLog((int)$invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
 
             $callLogFilename = sys_get_temp_dir().'/'.str_replace(
                 [' ', ':'],
@@ -255,7 +255,7 @@ class Ipex extends \Ease\Sand
      *
      * @return string binary PDF
      */
-    public function pdfCallLog($ipexCustomerID, $customerName, $offset = 1)
+    public function pdfCallLog(int $ipexCustomerID, $customerName, $offset = 1)
     {
         $caller = new \IPEXB2B\Calls();
 
@@ -405,7 +405,7 @@ class Ipex extends \Ease\Sand
         $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\RO::code('FAKTURA')));
 
         $invoice->setDataValue('stavMailK', 'stavMail.neodesilat');
-        $invoice->setDataValue('firma', \AbraFlexi\RO::code(current($callsOrders)['firma']));
+        $invoice->setDataValue('firma', \AbraFlexi\RO::code((string)current($callsOrders)['firma']));
         $invoice->setDataValue('typUcOp', \AbraFlexi\RO::code('TRŽBA SLUŽBY INT'));
 
         foreach ($callsOrders as $orderCode => $orderData) {
@@ -446,25 +446,17 @@ class Ipex extends \Ease\Sand
 
             $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
 
-            $orderHelper = new FakturaVydana();
-            $orderHelper->setEvidence('objednavka-prijata');
-
+            $orderHelper = $this->getOrderer();
             foreach ($callsOrders as $orderCode => $orderData) {
-                if (
-                    $orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode),
-                        'typDokl' => 'code:OBP', 'stavUzivK' => 'stavDoklObch.hotovo'])
-                ) {
-                    $orderHelper->addStatusMessage(sprintf(
-                        _('%s Order %s marked as done'),
-                        $orderData['firma']->showAs,
-                        $orderCode,
-                    ), 'success');
+//                $orderHelper->setData($orderData);
+//                $orderHelper->deleteFromAbraFlexi();
+                
+                // https://podpora.flexibee.eu/cs/articles/5917010-zamykani-obdobi-pres-rest-api
+                
+                if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode),'typDokl' =>  \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])                ) {
+                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'),$orderData['firma']->showAs,$orderCode), 'success');
                 } else {
-                    $orderHelper->addStatusMessage(sprintf(
-                        _('%s Order %s marked as done'),
-                        $orderData['firma']->showAs,
-                        $orderCode,
-                    ), 'error');
+                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'),$orderData['firma']->showAs,$orderCode,), 'error');
                 }
             }
         }
