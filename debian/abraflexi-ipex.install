@@ -1,0 +1,9 @@
+i18n/cs_CZ/LC_MESSAGES/*.mo     usr/share/locale/cs_CZ/LC_MESSAGES
+i18n/en_US/LC_MESSAGES/*.mo     usr/share/locale/en_US/LC_MESSAGES
+src/*.php			usr/share/abraflexi-ipex/
+src/AbraFlexiIpex/*.php		usr/share/abraflexi-ipex/
+debian/composer.json		usr/lib/abraflexi-ipex/
+bin/*                           usr/bin/
+.env.example                    usr/share/doc/abraflexi-ipex
+#io.github.spoje_net.abraflexi_ipex.metainfo.xml /usr/share/metainfo/
+abraflexi-ipex.svg       usr/share/icons/hicolor/scalable/apps/

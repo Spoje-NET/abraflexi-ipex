@@ -1,0 +1,106 @@
+{
+    "name": "Postpaid IPEX to AbraFlexi",
+    "description": "Generate invoices for postpaid Ipex calls using AbraFlexi",
+    "executable": "abraflexi-ipex-postpaid",
+    "setup": "abraflexi-ipex-setup",
+    "cmdparams": "",
+    "deploy": "apt install abraflexi-ipex",
+    "homepage": "https://github.com/Spoje-NET/abraflexi-ipex",
+    "requirements": "AbraFlexi",
+    "ociimage": "",
+    "topics": "AbraFlexi,Ipex,Invoice",
+    "uuid": "262dabf1-d7b1-42c8-91a1-fe991631547c",
+    "environment": {
+        "APP_DEBUG": {
+            "type": "checkbox",
+            "description": "Show debug messages",
+            "defval": "False",
+            "required": false
+        },
+        "EASE_LOGGER": {
+            "type": "string",
+            "description": "Logger type",
+            "defval": "syslog|console",
+            "required": false
+        },
+        "EMAIL_FROM": {
+            "type": "string",
+            "description": "Email from address",
+            "defval": "michal.tomasek@spojenet.cz",
+            "required": true
+        },
+        "SEND_INFO_TO": {
+            "type": "string",
+            "description": "Send info to address",
+            "defval": "",
+            "required": true
+        },
+        "ABRAFLEXI_URL": {
+            "type": "string",
+            "description": "AbraFlexi URL",
+            "defval": "",
+            "required": true
+        },
+        "ABRAFLEXI_LOGIN": {
+            "type": "string",
+            "description": "AbraFlexi login",
+            "defval": "",
+            "required": true
+        },
+        "ABRAFLEXI_PASSWORD": {
+            "type": "string",
+            "description": "AbraFlexi password",
+            "defval": "",
+            "required": true
+        },
+        "ABRAFLEXI_COMPANY": {
+            "type": "string",
+            "description": "AbraFlexi company",
+            "defval": "",
+            "required": true
+        },
+        "ABRAFLEXI_ORDERTYPE": {
+            "type": "string",
+            "description": "AbraFlexi order type",
+            "defval": "code:OBP_VOIP",
+            "required": true
+        },
+        "ABRAFLEXI_PRODUCT": {
+            "type": "string",
+            "description": "AbraFlexi product",
+            "defval": "code:IPEX_POSTPAID",
+            "required": true
+        },
+        "ABRAFLEXI_DOCTYPE": {
+            "type": "string",
+            "description": "AbraFlexi document type",
+            "defval": "code:FAKTURA",
+            "required": true
+        },
+        "ABRAFLEXI_SKIPLIST": {
+            "type": "string",
+            "description": "AbraFlexi skip list",
+            "defval": "",
+            "required": false
+        },
+        "IPEX_URL": {
+            "type": "string",
+            "description": "Ipex URL",
+            "defval": "https://restapi.ipex.cz",
+            "required": true
+        },
+        "IPEX_LOGIN": {
+            "type": "string",
+            "description": "Ipex login",
+            "defval": "",
+            "required": true
+        },
+        "IPEX_PASSWORD": {
+            "type": "string",
+            "description": "Ipex password",
+            "defval": "",
+            "required": true
+        }
+    },
+    "multiflexi": "1.20.0"
+}

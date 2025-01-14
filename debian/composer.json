@@ -1,0 +1,41 @@
+{
+    "name": "spojenet/abraflexi-ipex",
+    "description": "Ipex ⛗ AbraFlexi integration",
+    "type": "project",
+    "require": {
+        "mpdf/mpdf": "*",
+        "deb/flexibee": "*",
+        "deb/ipexb2b": "*",
+        "deb/ease-html": "*"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "SpojeNet\\AbraFlexiIpex\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "Vítězslav Dvořák",
+            "email": "vitezslav.dvorak@spojenet.cz"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/usr/share/php/EaseCore/"
+        },
+        {
+            "type": "path",
+            "url": "/usr/share/php/EaseHtml/"
+        },
+        {
+            "type": "path",
+            "url": "/usr/share/php/AbraFlexi/"
+        },
+        {
+            "type": "path",
+            "url": "/usr/share/php/IPEXB2B/"
+        }
+    ]
+}

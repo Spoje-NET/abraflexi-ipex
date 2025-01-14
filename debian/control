@@ -1,0 +1,26 @@
+Source: abraflexi-ipex
+Section: unknown
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://github.com/Spoje-NET/abraflexi-ipex
+Rules-Requires-Root: no
+Vcs-Git: https://github.com/Spoje-NET/abraflexi-ipex.git
+Vcs-Browser: https://github.com/Spoje-NET/abraflexi-ipex
+
+Package: abraflexi-ipex
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, php-spojenet-ipex-b2b,
+Description: Ipex ⛗ AbraFlexi integration
+ Create Invoices for Pepaid & Postpaid Ipex calls in AbraFlexi
+
+Package: multiflexi-abraflexi-ipex
+Depends: multiflexi, abraflexi-ipex
+Architecture: all
+Section: web
+Priority: optional
+Description: Add ipex for AbraFlexi to MultiFlexi
+ Install or Update MultiFlexi App json definitions for
+ ipex tools into MultiFlexi

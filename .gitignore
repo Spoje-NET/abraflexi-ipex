@@ -9,3 +9,12 @@ composer.phar
 /.vscode/
 /nbproject/
 /.env
+/debian/multiflexi-abraflexi-ipex/
+/debian/abraflexi-ipex/
+/debian/.debhelper/
+/debian/abraflexi-ipex.substvars
+/debian/files
+/debian/multiflexi-abraflexi-ipex.substvars
+/debian/debhelper-build-stamp
+/debian/multiflexi-abraflexi-ipex.debhelper.log
+/debian/abraflexi-ipex.debhelper.log

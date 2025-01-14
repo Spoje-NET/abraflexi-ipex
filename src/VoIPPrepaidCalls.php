@@ -17,7 +17,6 @@ namespace SpojeNet\AbraFlexiIpex;
 
 use Ease\Mailer;
 use Ease\Shared;
-use SpojeNet\AbraFlexiIpex\CallsListing;
 
 require_once '../vendor/autoload.php';
 
@@ -35,12 +34,9 @@ Shared::init(
     \array_key_exists('environment', $options) ? $options['environment'] : '../.env',
 );
 $destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
+\Ease\Locale::singleton(null, '../i18n', 'abraflexi-ipex');
 
-$defaultLocale = 'cs_CZ';
-setlocale(\LC_ALL, $defaultLocale);
-putenv("LC_ALL={$defaultLocale}");
-
-$grabber = new \IPEXB2B\ApiClient(null, ['section' => 'invoices']);
+$grabber = new \IPEXB2B\ApiClient('', ['section' => 'invoices']);
 
 if (Shared::cfg('APP_DEBUG', false)) {
     $grabber->logBanner();
@@ -49,10 +45,11 @@ if (Shared::cfg('APP_DEBUG', false)) {
 $grabber->setUrlParams(['monthOffset' => -1]);
 $invoicesRaw = $grabber->requestData('prepaid');
 $adresar = new \AbraFlexi\Adresar();
+$jsonReportData = [];
 
 foreach ($invoicesRaw as $invoiceRaw) {
     $sumCelkem = 0;
-    $klientExtID = 'ext:ipex:'.$invoiceRaw['customerId'];
+    $klientExtID = $invoiceRaw['externId'];
 
     if ($adresar->recordExists($klientExtID)) {
         $adresar->loadFromAbraFlexi($klientExtID);
@@ -65,64 +62,53 @@ foreach ($invoicesRaw as $invoiceRaw) {
         $startDate = new \DateTime();
         $startDate->modify('-1 month');
         $now = new \DateTime();
-        $calls = $caller->getCallsForCustomer(
-            $startDate,
-            $invoiceRaw['customerId'],
-        );
+        $calls = $caller->getCallsForCustomer($startDate, (int) $invoiceRaw['customerId']);
 
-        if ($calls) {
-            $range = strftime('%D', $startDate->getTimestamp()).' - '.strftime(
-                '%D',
-                $now->getTimestamp(),
-            );
-            $report = new \Ease\Container(new \Ease\Html\H2Tag('Calls listing'));
-            $report->addItem(new \Ease\Html\PTag($range));
-            $report->addItem(new CallsListing(
-                $calls,
-                ['style' => 'font-size: small'],
-            ));
+        $range = $startDate->format('m/d/Y').' - '.$now->format('m/d/Y');
+        $report = new \Ease\Container(new \Ease\Html\H2Tag('Calls listing'));
+        $report->addItem(new \Ease\Html\PTag($range));
+        $report->addItem(new CallsListing(
+            $calls,
+            ['style' => 'font-size: small'],
+        ));
 
-            $mpdfTmpDir = sys_get_temp_dir().'/mpdf';
+        $mpdfTmpDir = sys_get_temp_dir().'/mpdf';
 
-            if (!file_exists($mpdfTmpDir)) {
-                mkdir($mpdfTmpDir);
-            }
-
-            $html2pdf = new \Mpdf\Mpdf([
-                'default_font_size' => 8,
-                'default_font' => 'dejavusans',
-                'tempDir' => $mpdfTmpDir,
-            ]);
-            $html2pdf->setDefaultFont('Helvetica');
-            $html2pdf->writeHTML((string) $report);
-            $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
-
-            $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
-
-            $postman = new Mailer(
-                $email,
-                _('Prepaid Calls listing').' '.$range,
-                _('Prepaid Calls for last month'),
-            );
-            $postman->addFile($pdfFilename, 'application/pdf');
-
-            unlink($pdfFilename);
-
-            $postman->send();
+        if (!file_exists($mpdfTmpDir)) {
+            mkdir($mpdfTmpDir);
         }
+
+        $html2pdf = new \Mpdf\Mpdf([
+            'default_font_size' => 8,
+            'default_font' => 'dejavusans',
+            'tempDir' => $mpdfTmpDir,
+        ]);
+        $html2pdf->setDefaultFont('Helvetica');
+        $html2pdf->writeHTML((string) $report);
+        $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
+
+        $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
+
+        $postman = new Mailer(
+            $email,
+            _('Prepaid Calls listing').' '.$range,
+            _('Prepaid Calls for last month'),
+        );
+        $postman->addFile($pdfFilename, 'application/pdf');
+
+        unlink($pdfFilename);
+
+        $jsonReportData[$adresar->getRecordCode()]['mail'] = $postman->send();
     } else {
+        $jsonReportData[$adresar->getRecordCode()]['mail'] = false;
         $engine->addStatusMessage(
             $invoiceRaw['customerName'].' without extID',
             'warning',
         );
-        $engine->addStatusMessage(
-            \constant('SYSTEM_URL').'/ipex.php?customerId='.$invoiceRaw['customerId'].'&extid='.$invoiceRaw['externId'],
-            'debug',
-        );
     }
 }
 
-$written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
+$written = file_put_contents($destination, json_encode($jsonReportData, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
 $engine->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
 
 exit($exitcode);

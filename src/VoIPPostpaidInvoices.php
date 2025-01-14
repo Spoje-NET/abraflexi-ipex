@@ -33,9 +33,7 @@ Shared::init(
 );
 $destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
 
-$defaultLocale = 'cs_CZ';
-setlocale(\LC_ALL, $defaultLocale);
-putenv("LC_ALL={$defaultLocale}");
+\Ease\Locale::singleton(null, '../i18n', 'abraflexi-ipex');
 
 $ipexer = new \SpojeNet\AbraFlexiIpex\Ipex();
 

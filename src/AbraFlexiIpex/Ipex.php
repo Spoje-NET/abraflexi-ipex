@@ -61,7 +61,7 @@ class Ipex extends \Ease\Sand
     /**
      * @param array<int, array<string, string>> $invoicesRaw
      *
-     * @return array<string,array> Description
+     * @return array<string, array> Description
      */
     public function processIpexInvoices(array $invoicesRaw): array
     {
@@ -79,7 +79,7 @@ class Ipex extends \Ease\Sand
                 $result[(string) $invoiceRaw['externId']]['calls'] = $calls;
 
                 if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
-                    $result[(string) $invoiceRaw['externId']]['invoice'] = $this->createInvoice($calls, (int)$invoiceRaw['customerId']);
+                    $result[(string) $invoiceRaw['externId']]['invoice'] = $this->createInvoice($calls, (int) $invoiceRaw['customerId']);
                 }
             }
         }
