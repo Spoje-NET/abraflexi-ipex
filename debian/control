@@ -12,7 +12,7 @@ Vcs-Browser: https://github.com/Spoje-NET/abraflexi-ipex
 Package: abraflexi-ipex
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}, php-spojenet-ipex-b2b, php-vitexsoftware-ease-html, php-spojenet-abraflexi
+Depends: ${misc:Depends}, ${shlibs:Depends}, php-spojenet-ipex-b2b, php-vitexsoftware-ease-html, php-spojenet-abraflexi (>= 3.4)
 Description: Ipex ⛗ AbraFlexi integration
  Create Invoices for Pepaid & Postpaid Ipex calls in AbraFlexi
 
