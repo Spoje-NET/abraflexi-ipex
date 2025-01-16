@@ -1,2 +1,2 @@
 #!/bin/bash
-php -f /usr/lib/abraflexi-ipex/VoIPPostpaidInvoices.php -- $@
+php -f /usr/share/abraflexi-ipex/VoIPPostpaidInvoices.php -- $@
