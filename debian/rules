@@ -8,12 +8,11 @@
 %:
 	dh $@
 
-override_dh_auto_install:
-	dh_auto_install
-#	sed -i -e 's/..\/i18n/\/usr\/share\/locale/g' debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
-#	sed -i -e 's/..\/vendor/\/var\/lib\/composer\/abraflexi-ipex/g'   debian/abraflexi-ipex/usr/lib/abraflexi-ipex/*.php
-#	sed -i -e 's/\.\.\/.env//g'  debian/abraflexi-ipex/usr/lib/abraflexi-ipex/*.php
-#	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//' `'"'  debian/composer.json |sponge debian/abraflexi-ipex/usr/lib/abraflexi-ipex/composer.json
-#	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-postpaid.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-postpaid.multiflexi.app.json
-#	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json
-
+override_dh_install:
+	dh_install
+	sed -i -e 's/..\/i18n/\/usr\/share\/locale/g' debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
+	sed -i -e 's/..\/vendor/\/var\/lib\/composer\/abraflexi-ipex/g'	debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
+	sed -i -e 's/\.\.\/.env//g'  debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
+	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//' `'"'  debian/composer.json |sponge debian/abraflexi-ipex/usr/lib/abraflexi-ipex/composer.json
+	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-postpaid.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-postpaid.multiflexi.app.json
+	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json
