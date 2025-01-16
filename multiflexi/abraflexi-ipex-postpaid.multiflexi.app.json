@@ -17,6 +17,12 @@
             "defval": "False",
             "required": false
         },
+        "RESULT_FILE": {
+            "type": "string",
+            "description": "write output json data to",
+            "defval": "bank_import_report_{ACCOUNT_NUMBER}.json",
+            "required": false
+        },
         "EASE_LOGGER": {
             "type": "string",
             "description": "Logger type",
