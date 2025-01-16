@@ -131,9 +131,9 @@ class Ipex extends \Ease\Sand
                 'polozkyDokladu(kod,nazev,cenaMj)',
             ],
             [
-                'firma' => $klientExtID, 
+                'firma' => $klientExtID,
                 'storno' => false,
-                'stavUzivK' => 'stavDoklObch.pripraveno', 
+                'stavUzivK' => 'stavDoklObch.pripraveno',
                 'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP')],
             'id',
         );
@@ -460,20 +460,20 @@ class Ipex extends \Ease\Sand
                 // https://podpora.flexibee.eu/cs/articles/5917010-zamykani-obdobi-pres-rest-api
 
                 $lockState = $orderHelper->locked();
-                if($lockState){
+
+                if ($lockState) {
                     $orderHelper->unlock();
                 }
-                
+
                 if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode), 'typDokl' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])) {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'success');
                 } else {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'error');
                 }
-                
-                if($lockState){
+
+                if ($lockState) {
                     $orderHelper->lock();
                 }
-                
             }
         }
 
