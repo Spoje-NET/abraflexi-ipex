@@ -6,7 +6,7 @@ Ipex ⛗ AbraFlexi integration
 
 - [Introduction](#introduction)
 - [Features](#features)
-- [Installation](#installation)
+- [Installation](#debianubuntu-installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -18,40 +18,9 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 
 ## Features
 
-- Synchronize data between Ipex and AbraFlexi
-- Automated invoice generation
-- Support for multiple document types
-- Configurable logging options
-- Secure authentication and data transfer
-
-## Installation
-
-To install the `abraflexi-ipex` integration, follow these steps:
-
-1. Clone the repository:
-
-    ```sh
-    git clone https://github.com/Spoje-NET/abraflexi-ipex.git
-    cd abraflexi-ipex
-    ```
-
-2. Install dependencies using Composer:
-
-    ```sh
-    composer install
-    ```
-
-3. Set up the environment configuration by copying the example file:
-
-    ```sh
-    cp .env.example .env
-    ```
-
-4. Edit the `.env` file to match your configuration:
-
-    ```sh
-    nano .env
-    ```
+- Generate AbraFlexi Orders from Ipex Calls & send Call List to customer.
+- Generate AbraFlexi Invoicess from AbraFlexi orders when amount reach treshold.
+- Send pre-paid Call list to customer.
 
 ## Configuration
 
@@ -78,22 +47,60 @@ The [.env](.env.example) file contains the necessary configuration for the integ
 
 To use the `abraflexi-ipex` integration, run the following commands:
 
-- For postpaid integration:
+- For postpaid calls to generate orders and send call list to customer:
 
     ```sh
-    ./bin/abraflexi-ipex-postpaid
+    abraflexi-ipex-postpaid-orders
     ```
 
-- For prepaid integration:
+- For previously saved orders to generate invoices:
 
     ```sh
-    ./bin/abraflexi-ipex-prepaid
+    abraflexi-ipex-prepaid-invoices
     ```
 
-- For setup:
+Example output:
+
+`
+01/17/2025 21:55:09 ⚙ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ IPEXPostPaidInvoices EaseCore 1.45.0 (PHP 8.2.27)
+01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:01183
+01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:03489
+01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Unknown AbraFlexi customer. No invoice created.
+01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:01846
+01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:02509
+{
+    "code:01183": {
+        "invoice": "Not an Ipex customer: code:01183 ?"
+    },
+    "code:03489": {
+        "invoice": "Not an Ipex customer: code:03489 ?"
+    },
+    "nocustomer": [
+        "OBP0022\/2025",
+        "OBP0044\/2025",
+        "OBP0122\/2025",
+        "OBP0296\/2025"
+    ],
+    "code:01846": {
+        "invoice": "Not an Ipex customer: code:01846 ?"
+    },
+    "code:02509": {
+        "invoice": "Not an Ipex customer: code:02509 ?"
+    }
+}01/17/2025 21:55:10 🌼 ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Saving result to php://stdout
+
+`
+
+- To send prepaid call list to customer:
 
     ```sh
-    ./bin/abraflexi-ipex-setup
+    abraflexi-ipex-prepaid
+    ```
+
+- For initial setup:
+
+    ```sh
+    abraflexi-ipex-setup
     ```
 
 ## Contributing
@@ -106,20 +113,14 @@ We welcome contributions to the `abraflexi-ipex` project. To contribute, please 
 4. Push your changes to your fork.
 5. Create a pull request to the main repository.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
-MultiFlexi
-----------
+## MultiFlexi
 
 AbraFlexi-Ipex is ready for run as [MultiFlexi](https://multiflexi.eu) application.
 See the full list of ready-to-run applications within the MultiFlexi platform on the [application list page](https://www.multiflexi.eu/apps.php).
 
 [![MultiFlexi App](https://github.com/VitexSoftware/MultiFlexi/blob/main/doc/multiflexi-app.svg)](https://www.multiflexi.eu/apps.php)
 
-Debian/Ubuntu
--------------
+## Debian/Ubuntu Installation
 
 For Linux, .deb packages are available. Please use the repo:
 
@@ -129,3 +130,7 @@ For Linux, .deb packages are available. Please use the repo:
     sudo apt update
     sudo apt install abraflexi-ipex
 ```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
