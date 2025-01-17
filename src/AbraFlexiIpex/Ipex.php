@@ -120,13 +120,14 @@ class Ipex extends \Ease\Sand
                         $result[$customer]['invoice'] = $this->ordersToInvoice($calls, $customer)->getRecordCode();
                     } else {
                         $this->addStatusMessage(_('Unknown AbraFlexi customer. No invoice created.'), 'warning');
-                        foreach ($calls as $call){
+
+                        foreach ($calls as $call) {
                             $result['nocustomer'][] = $call['kod'];
                         }
                     }
                 } else {
                     $this->addStatusMessage(sprintf(_('Ipex Customer Without externalId: %s'), $customer), 'warning');
-                    $result[$customer]['invoice'] = sprintf( _('Not an Ipex customer: %s ?'), $customer );
+                    $result[$customer]['invoice'] = sprintf(_('Not an Ipex customer: %s ?'), $customer);
                 }
             }
         }
