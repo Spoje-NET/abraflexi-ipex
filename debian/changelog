@@ -1,8 +1,15 @@
-abraflexi-ipex (1.0.0) UNRELEASED; urgency=medium
+abraflexi-ipex (1.0.1) UNRELEASED; urgency=medium
 
+  * bugfixes only
+
+ --  <vitezslav.dvorak@spojenet.cz>  Sun, 02 Feb 2025 14:05:54 +0100
+
+abraflexi-ipex (1.0.0) unstable; urgency=medium
+
+  [ vitex ]
   * separated calls to orders & orders to invoices
 
- -- vitex <info@vitexsoftware.cz>  Fri, 17 Jan 2025 22:41:46 +0100
+ --  <vitezslav.dvorak@spojenet.cz>  Sun, 02 Feb 2025 14:05:30 +0100
 
 abraflexi-ipex (0.1.0) unstable; urgency=low
 

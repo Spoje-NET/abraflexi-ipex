@@ -141,6 +141,8 @@ class Ipex extends \Ease\Sand
     /**
      * Get IPEX orders not in "done" state.
      *
+     * @param null|string $klientExtID Description
+     *
      * @return array<int, array<string, mixed>> Orders with IPEX_POSTPAID item
      */
     public function getUnivoicedCalls(?string $klientExtID = null): array
@@ -161,6 +163,8 @@ class Ipex extends \Ease\Sand
     }
 
     /**
+     * @param null|string $klientExtID Description
+     *
      * @return array<int, array<string, mixed>>
      */
     public function getUsersPreparedOrders(?string $klientExtID = null)
@@ -223,9 +227,9 @@ class Ipex extends \Ease\Sand
      *
      * @return float
      */
-    public function uninvoicedAmount($ordersData)
+    public function uninvoicedAmount($ordersData): float
     {
-        $amount = 0;
+        $amount = 0.0;
 
         foreach ($ordersData as $orderCode => $orderData) {
             $amount += (float) $orderData['sumCelkem'];
