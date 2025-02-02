@@ -307,7 +307,7 @@ class Ipex extends \Ease\Sand
 
     public static function formatDate($dateTime)
     {
-        return $dateTime->format('y m. d. H:i:s T');
+        return $dateTime->format('m. d. Y');
     }
 
     /**
