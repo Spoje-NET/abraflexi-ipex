@@ -111,6 +111,7 @@ class Ipex extends \Ease\Sand
 
         $callsByCustomer = [];
         $result = [];
+
         if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
             foreach ($calls as $call) {
                 $callsByCustomer[(string) $call['firma']][$call['kod']] = $call;
@@ -372,12 +373,10 @@ class Ipex extends \Ease\Sand
             \Ease\Functions::rip($customerName),
         )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
 
-
         return file_put_contents(
-                $pdfFilename,
-                $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
-            ) ? $pdfFilename : '';
-
+            $pdfFilename,
+            $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
+        ) ? $pdfFilename : '';
     }
 
     /**
