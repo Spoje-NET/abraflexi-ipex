@@ -207,7 +207,7 @@ class Ipex extends \Ease\Sand
         $pricelistItem = [
             'cenaMj' => $invoiceRaw['price'],
             'nazev' => 'Telefonní služby od '.self::formatDate($startDate).' do '.self::formatDate($endDate),
-            'cenik' => \AbraFlexi\Functions::code( \Ease\Shared::cfg( 'ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID' ) ),
+            'cenik' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
             'stitky' => 'API_IPEX',
         ];
         $order->setDataValue('popis', $pricelistItem['nazev']);
@@ -220,7 +220,7 @@ class Ipex extends \Ease\Sand
                 $order->sync() ? 'success' : 'error',
             );
 
-            $pdfCallLog = $this->pdfCallLog((int)$invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
+            $pdfCallLog = $this->pdfCallLog((int) $invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
 
             $callLogFilename = sys_get_temp_dir().'/'.str_replace(
                 [' ', ':'],
@@ -405,7 +405,7 @@ class Ipex extends \Ease\Sand
         $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\RO::code('FAKTURA')));
 
         $invoice->setDataValue('stavMailK', 'stavMail.neodesilat');
-        $invoice->setDataValue('firma', \AbraFlexi\RO::code((string)current($callsOrders)['firma']));
+        $invoice->setDataValue('firma', \AbraFlexi\RO::code((string) current($callsOrders)['firma']));
         $invoice->setDataValue('typUcOp', \AbraFlexi\RO::code('TRŽBA SLUŽBY INT'));
 
         foreach ($callsOrders as $orderCode => $orderData) {
@@ -447,16 +447,17 @@ class Ipex extends \Ease\Sand
             $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
 
             $orderHelper = $this->getOrderer();
+
             foreach ($callsOrders as $orderCode => $orderData) {
-//                $orderHelper->setData($orderData);
-//                $orderHelper->deleteFromAbraFlexi();
-                
+                //                $orderHelper->setData($orderData);
+                //                $orderHelper->deleteFromAbraFlexi();
+
                 // https://podpora.flexibee.eu/cs/articles/5917010-zamykani-obdobi-pres-rest-api
-                
-                if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode),'typDokl' =>  \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])                ) {
-                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'),$orderData['firma']->showAs,$orderCode), 'success');
+
+                if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode), 'typDokl' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])) {
+                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'success');
                 } else {
-                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'),$orderData['firma']->showAs,$orderCode,), 'error');
+                    $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'error');
                 }
             }
         }

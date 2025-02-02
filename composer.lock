@@ -1433,12 +1433,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ergebnis/json-normalizer.git",
-                "reference": "01a07bb0121103d3eee27ef341fdba75b5559ad6"
+                "reference": "a14f5119470553447ea438b2d231eee5dd6fc72a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ergebnis/json-normalizer/zipball/01a07bb0121103d3eee27ef341fdba75b5559ad6",
-                "reference": "01a07bb0121103d3eee27ef341fdba75b5559ad6",
+                "url": "https://api.github.com/repos/ergebnis/json-normalizer/zipball/a14f5119470553447ea438b2d231eee5dd6fc72a",
+                "reference": "a14f5119470553447ea438b2d231eee5dd6fc72a",
                 "shasum": ""
             },
             "require": {
@@ -1508,7 +1508,7 @@
                 "security": "https://github.com/ergebnis/json-normalizer/blob/main/.github/SECURITY.md",
                 "source": "https://github.com/ergebnis/json-normalizer"
             },
-            "time": "2025-01-01T00:15:56+00:00"
+            "time": "2025-01-13T20:33:15+00:00"
         },
         {
             "name": "ergebnis/json-pointer",
@@ -1666,12 +1666,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ergebnis/json-schema-validator.git",
-                "reference": "6ac661e861ac9c2539bd1300de50a42d13f258a5"
+                "reference": "af49ee7773ab25f9758c4b77ed303ba393e243fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ergebnis/json-schema-validator/zipball/6ac661e861ac9c2539bd1300de50a42d13f258a5",
-                "reference": "6ac661e861ac9c2539bd1300de50a42d13f258a5",
+                "url": "https://api.github.com/repos/ergebnis/json-schema-validator/zipball/af49ee7773ab25f9758c4b77ed303ba393e243fd",
+                "reference": "af49ee7773ab25f9758c4b77ed303ba393e243fd",
                 "shasum": ""
             },
             "require": {
@@ -1736,7 +1736,7 @@
                 "security": "https://github.com/ergebnis/json-schema-validator/blob/main/.github/SECURITY.md",
                 "source": "https://github.com/ergebnis/json-schema-validator"
             },
-            "time": "2025-01-01T00:33:29+00:00"
+            "time": "2025-01-13T22:26:54+00:00"
         },
         {
             "name": "ergebnis/php-cs-fixer-config",
@@ -2747,12 +2747,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "70fa33eeabebf93f3301c2b840849bc8e863155e"
+                "reference": "d4679aa4baabe5520bbf9f65ead03f144f78ff93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/70fa33eeabebf93f3301c2b840849bc8e863155e",
-                "reference": "70fa33eeabebf93f3301c2b840849bc8e863155e",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/d4679aa4baabe5520bbf9f65ead03f144f78ff93",
+                "reference": "d4679aa4baabe5520bbf9f65ead03f144f78ff93",
                 "shasum": ""
             },
             "require": {
@@ -2817,7 +2817,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-01T10:05:11+00:00"
+            "time": "2025-01-14T13:07:13+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
