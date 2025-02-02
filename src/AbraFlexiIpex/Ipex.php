@@ -120,7 +120,7 @@ class Ipex extends \Ease\Sand
             foreach ($callsByCustomer as $customer => $calls) {
                 if (\array_key_exists($customer, $this->ipexUsers)) {
                     if (\AbraFlexi\Functions::uncode($customer)) {
-                        $result[$customer]['invoice'] = $this->ordersToInvoice($calls, $customer)->getRecordCode();
+                        $result[$customer]['invoice'] = $this->createInvoice($calls)->getRecordCode();
                     } else {
                         $this->addStatusMessage(_('Unknown AbraFlexi customer. No invoice created.'), 'warning');
 
@@ -456,15 +456,13 @@ class Ipex extends \Ease\Sand
 
     /**
      * Create new IPEX Invoice.
-     *
-     * @param int $ipexCustomerID Customer's IPEX ID
      */
-    public function createInvoice(array $callsOrders, int $ipexCustomerID): \AbraFlexi\FakturaVydana
+    public function createInvoice(array $callsOrders): \AbraFlexi\FakturaVydana
     {
         $invoice = new FakturaVydana();
         $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\RO::code('FAKTURA')));
 
-        $invoice->setDataValue('stavMailK', 'stavMail.neodesilat');
+        $invoice->setDataValue('stavMailK', strtolower(\Ease\Shared::cfg('ABRAFLEXI_SEND', 'false')) === 'true' ? 'stavMail.odeslat' : 'stavMail.neodesilat');
         $invoice->setDataValue('firma', \AbraFlexi\RO::code((string) current($callsOrders)['firma']));
         $invoice->setDataValue('typUcOp', \AbraFlexi\RO::code('TRŽBA SLUŽBY INT'));
 
@@ -510,7 +508,7 @@ class Ipex extends \Ease\Sand
                 'success',
             );
 
-            $ipexCustomerID = (int) $this->ipexUsers[$customerID]['id'];
+            $ipexCustomerID = (int) $this->ipexUsers[$this->getDataValue('firma')]['id'];
 
             \AbraFlexi\Priloha::addAttachmentFromFile($invoice, $this->savePdfCallLog($ipexCustomerID, $invoice->getDataValue('firma')->showAs, \count($callsOrders)));
 

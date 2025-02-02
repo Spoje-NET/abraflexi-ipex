@@ -71,6 +71,12 @@
             "defval": "code:OBP_VOIP",
             "required": true
         },
+        "ABRAFLEXI_SEND": {
+            "type": "checkbox",
+            "description": "Send created invoices immediately",
+            "defval": "False",
+            "required": true
+        },
         "ABRAFLEXI_PRODUCT": {
             "type": "string",
             "description": "AbraFlexi product",
