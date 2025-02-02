@@ -88,7 +88,7 @@ class Ipex extends \Ease\Sand
 
             $order = $this->createOrder($invoiceRaw);
 
-            if ($order->getRecordI()) {
+            if ($order->getRecordId()) {
                 $result[(string) $invoiceRaw['externId']]['order'] = $order->getRecordCode();
             } else {
                 $result[(string) $invoiceRaw['externId']]['order'] = _('No Calls');

@@ -20,7 +20,7 @@
         "RESULT_FILE": {
             "type": "string",
             "description": "write output json data to",
-            "defval": "bank_import_report_{ACCOUNT_NUMBER}.json",
+            "defval": "prepaid_ipex_to_abraflexi_{ABRAFLEXI_COMPANY}_orders.json",
             "required": false
         },
         "EASE_LOGGER": {
@@ -82,6 +82,12 @@
             "description": "AbraFlexi document type",
             "defval": "code:FAKTURA",
             "required": true
+        },
+        "ABRAFLEXI_CREATE_EMPTY_ORDERS": {
+            "type": "checkbox",
+            "description": "Create empty orders",
+            "defval": "False",
+            "required": false
         },
         "ABRAFLEXI_SKIPLIST": {
             "type": "string",
