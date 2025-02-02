@@ -224,8 +224,6 @@ class Ipex extends \Ease\Sand
      * Count Given Orders Total.
      *
      * @param array $ordersData
-     *
-     * @return float
      */
     public function uninvoicedAmount($ordersData): float
     {

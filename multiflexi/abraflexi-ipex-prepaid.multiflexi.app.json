@@ -1,7 +1,7 @@
 {
     "name": "Prepaid IPEX to AbraFlexi",
     "description": "Generate invoices for prepaid Ipex calls using AbraFlexi",
-    "executable": "abraflexi-ipex-postpaid",
+    "executable": "abraflexi-ipex-prepaid",
     "setup": "abraflexi-ipex-setup",
     "cmdparams": "",
     "deploy": "apt install abraflexi-ipex",
