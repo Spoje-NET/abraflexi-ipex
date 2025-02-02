@@ -4,9 +4,9 @@
     "type": "project",
     "require": {
         "mpdf/mpdf": "^8.2",
-        "spojenet/flexibee": "^3.3",
+        "spojenet/flexibee": "^3.4",
         "spojenet/ipexb2b": "dev-main",
-        "vitexsoftware/ease-html":  "^1.40"
+        "vitexsoftware/ease-html": "^1.40"
     },
     "license": "MIT",
     "autoload": {

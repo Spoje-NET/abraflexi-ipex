@@ -31,7 +31,7 @@ Shared::init(
         'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
         'ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY',
     ],
-    \array_key_exists('environment', $options) ? $options['environment'] : '../.env',
+    \array_key_exists('environment', $options) ? $options['environment'] : (\array_key_exists('e', $options) ? $options['e'] : '../.env'),
 );
 $destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
 \Ease\Locale::singleton(null, '../i18n', 'abraflexi-ipex');

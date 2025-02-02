@@ -24,7 +24,14 @@ use Ease\Shared;
 \define('APP_NAME', 'AbraFlexiIpexInit');
 
 require_once '../vendor/autoload.php';
-Shared::init(['ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY'], \array_key_exists(1, $argv) ? $argv[1] : (file_exists('../.env') ? '../.env' : null));
+$options = getopt('o::e::', ['output::environment::']);
+Shared::init(
+    [
+        'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
+        'ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY',
+    ],
+    \array_key_exists('environment', $options) ? $options['environment'] : (\array_key_exists('e', $options) ? $options['e'] : '../.env'),
+);
 new \Ease\Locale(Shared::cfg('MATCHER_LOCALIZE'), '../i18n', 'abraflexi-matcher');
 $labeler = new Stitek();
 

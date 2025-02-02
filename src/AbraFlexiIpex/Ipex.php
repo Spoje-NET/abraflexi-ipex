@@ -32,6 +32,7 @@ class Ipex extends \Ease\Sand
     public \DateTime $until;
     private string $counter = '';
     private ObjednavkaPrijata $order;
+    private $ipexUsers = [];
 
     public function __construct()
     {
@@ -59,11 +60,25 @@ class Ipex extends \Ease\Sand
     }
 
     /**
+     * Obtain Customer List.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function getIpexCustomersByExtCode()
+    {
+        $customers = new \IPEXB2B\Customers();
+
+        return \Ease\Functions::reindexArrayBy($customers->requestData(), 'externId');
+    }
+
+    /**
+     * Get Postpaid Calls and save it to Orders.
+     *
      * @param array<int, array<string, string>> $invoicesRaw
      *
      * @return array<string, array> Description
      */
-    public function processIpexInvoices(array $invoicesRaw): array
+    public function processIpexPostpaidOrders(array $invoicesRaw): array
     {
         $position = 0;
 
@@ -73,13 +88,49 @@ class Ipex extends \Ease\Sand
 
             $order = $this->createOrder($invoiceRaw);
 
-            if ($order) {
+            if ($order->getRecordI()) {
                 $result[(string) $invoiceRaw['externId']]['order'] = $order->getRecordCode();
-                $calls = $this->getUnivoicedCalls($invoiceRaw['externId']);
-                $result[(string) $invoiceRaw['externId']]['calls'] = $calls;
+            } else {
+                $result[(string) $invoiceRaw['externId']]['order'] = _('No Calls');
+            }
+        }
 
-                if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
-                    $result[(string) $invoiceRaw['externId']]['invoice'] = $this->createInvoice($calls, (int) $invoiceRaw['customerId']);
+        return $result;
+    }
+
+    /**
+     * Process AbraFlexi Orders to AbraFlexi Invoices.
+     *
+     * @return array<string, array> Description
+     */
+    public function processIpexPostpaidInvoices(): array
+    {
+        $this->ipexUsers = $this->getIpexCustomersByExtCode();
+
+        $calls = $this->getUnivoicedCalls();
+
+        $callsByCustomer = [];
+        $result = [];
+
+        if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
+            foreach ($calls as $call) {
+                $callsByCustomer[(string) $call['firma']][$call['kod']] = $call;
+            }
+
+            foreach ($callsByCustomer as $customer => $calls) {
+                if (\array_key_exists($customer, $this->ipexUsers)) {
+                    if (\AbraFlexi\Functions::uncode($customer)) {
+                        $result[$customer]['invoice'] = $this->ordersToInvoice($calls, $customer)->getRecordCode();
+                    } else {
+                        $this->addStatusMessage(_('Unknown AbraFlexi customer. No invoice created.'), 'warning');
+
+                        foreach ($calls as $call) {
+                            $result['nocustomer'][] = $call['kod'];
+                        }
+                    }
+                } else {
+                    $this->addStatusMessage(sprintf(_('Ipex Customer Without externalId: %s'), $customer), 'warning');
+                    $result[$customer]['invoice'] = sprintf(_('Not an Ipex customer: %s ?'), $customer);
                 }
             }
         }
@@ -92,7 +143,7 @@ class Ipex extends \Ease\Sand
      *
      * @return array<int, array<string, mixed>> Orders with IPEX_POSTPAID item
      */
-    public function getUnivoicedCalls(string $klientExtID): array
+    public function getUnivoicedCalls(?string $klientExtID = null): array
     {
         $ipexOrders = [];
 
@@ -112,16 +163,27 @@ class Ipex extends \Ease\Sand
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function getUsersPreparedOrders(string $klientExtID)
+    public function getUsersPreparedOrders(?string $klientExtID = null)
     {
         $result = [];
         $this->getOrderer()->defaultUrlParams['order'] = 'datVyst@A';
         $this->getOrderer()->defaultUrlParams['limit'] = 0;
+
+        $conds = [
+            'storno' => false,
+            'stavUzivK' => 'stavDoklObch.pripraveno',
+            'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP')];
+
+        if ($klientExtID) {
+            $conds['firma'] = $klientExtID;
+        }
+
         $orders = $this->getOrderer()->getColumnsFromAbraFlexi(
             [
                 'kod',
                 'mena',
                 'firma',
+                'zamekK',
                 'smerKod',
                 'datVyst',
                 'specSym',
@@ -129,7 +191,7 @@ class Ipex extends \Ease\Sand
                 'sumCelkemMen',
                 'polozkyDokladu(kod,nazev,cenaMj)',
             ],
-            ['firma' => $klientExtID, 'stavUzivK' => 'stavDoklObch.pripraveno', 'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP')],
+            $conds,
             'id',
         );
 
@@ -179,7 +241,7 @@ class Ipex extends \Ease\Sand
      *
      * @return \SpojeNet\AbraFlexiIpex\FakturaVydana
      */
-    public function createOrder($invoiceRaw)
+    public function createOrder(array $invoiceRaw)
     {
         $adresar = new \AbraFlexi\Adresar();
         $startDate = new \DateTime($invoiceRaw['dateStart']);
@@ -234,11 +296,11 @@ class Ipex extends \Ease\Sand
             $this->sendCallListByMail($order, $callLogFilename);
 
             unlink($callLogFilename);
-
-            return $order;
+        } else {
+            $order->addStatusMessage($this->counter.$invoiceRaw['customerName'].' 0,-', 'debug');
         }
 
-        $order->addStatusMessage($this->counter.$invoiceRaw['customerName'].' 0,-', 'debug');
+        return $order;
     }
 
     public static function formatDate($dateTime)
@@ -255,7 +317,7 @@ class Ipex extends \Ease\Sand
      *
      * @return string binary PDF
      */
-    public function pdfCallLog(int $ipexCustomerID, $customerName, $offset = 1)
+    public function pdfCallLog(int $ipexCustomerID, string $customerName, int $offset = 1)
     {
         $caller = new \IPEXB2B\Calls();
 
@@ -311,14 +373,10 @@ class Ipex extends \Ease\Sand
             \Ease\Functions::rip($customerName),
         )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
 
-        if (
-            file_put_contents(
-                $pdfFilename,
-                $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
-            )
-        ) {
-            return $pdfFilename;
-        }
+        return file_put_contents(
+            $pdfFilename,
+            $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
+        ) ? $pdfFilename : '';
     }
 
     /**
@@ -361,8 +419,8 @@ class Ipex extends \Ease\Sand
     /**
      * Send CallList by mail.
      *
-     * @param ObjednavkaVydana $order
-     * @param string           $callLogFilename PDF File path
+     * @param \AbraFlexi\ObjednavkaVydana $order
+     * @param string                      $callLogFilename PDF File path
      *
      * @return bool send status
      */
@@ -409,6 +467,14 @@ class Ipex extends \Ease\Sand
         $invoice->setDataValue('typUcOp', \AbraFlexi\RO::code('TRŽBA SLUŽBY INT'));
 
         foreach ($callsOrders as $orderCode => $orderData) {
+            if (isset($this->since) === false || $this->since > $orderData['datVyst']) {
+                $this->since = $orderData['datVyst'];
+            }
+
+            if (isset($this->until) === false || $this->until < $orderData['datVyst']) {
+                $this->until = new $orderData['datVyst']();
+            }
+
             if (!empty($orderData['polozkyDokladu'])) {
                 foreach ($orderData['polozkyDokladu'] as $orderItem) {
                     if ($orderItem['kod'] === \AbraFlexi\Functions::uncode(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'))) {
@@ -431,7 +497,7 @@ class Ipex extends \Ease\Sand
 
         $invoice->setDataValue(
             'popis',
-            'Telefonní služby ' /* . _('from') . ' ' . self::formatDate($startDate) . ' ' */._('to').' '.self::formatDate($this->until),
+            'Telefonní služby '._('from').' '.self::formatDate($this->since).' '._('to').' '.self::formatDate($this->until),
         );
 
         $invoice->setDataValue('duzpPuv', \AbraFlexi\Functions::dateToFlexiDate($this->until));
@@ -442,6 +508,8 @@ class Ipex extends \Ease\Sand
                 'success',
             );
 
+            $ipexCustomerID = (int) $this->ipexUsers[$customerID]['id'];
+
             \AbraFlexi\Priloha::addAttachmentFromFile($invoice, $this->savePdfCallLog($ipexCustomerID, $invoice->getDataValue('firma')->showAs, \count($callsOrders)));
 
             $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
@@ -449,15 +517,25 @@ class Ipex extends \Ease\Sand
             $orderHelper = $this->getOrderer();
 
             foreach ($callsOrders as $orderCode => $orderData) {
-                //                $orderHelper->setData($orderData);
+                $orderHelper->setData($orderData);
                 //                $orderHelper->deleteFromAbraFlexi();
 
                 // https://podpora.flexibee.eu/cs/articles/5917010-zamykani-obdobi-pres-rest-api
+
+                $lockState = $orderHelper->locked();
+
+                if ($lockState) {
+                    $orderHelper->unlock();
+                }
 
                 if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode), 'typDokl' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])) {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'success');
                 } else {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'error');
+                }
+
+                if ($lockState) {
+                    $orderHelper->lock();
                 }
             }
         }

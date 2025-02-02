@@ -1,7 +1,7 @@
 {
-    "name": "Postpaid IPEX to AbraFlexi",
-    "description": "Generate invoices for postpaid Ipex calls using AbraFlexi",
-    "executable": "abraflexi-ipex-postpaid",
+    "name": "Postpaid IPEX to AbraFlexi Invoices",
+    "description": "Generate invoices from Orders using AbraFlexi",
+    "executable": "abraflexi-ipex-postpaid-invoices",
     "setup": "abraflexi-ipex-setup",
     "cmdparams": "",
     "deploy": "apt install abraflexi-ipex",
@@ -15,6 +15,12 @@
             "type": "checkbox",
             "description": "Show debug messages",
             "defval": "False",
+            "required": false
+        },
+        "RESULT_FILE": {
+            "type": "string",
+            "description": "write output json data to",
+            "defval": "bank_import_report_{ACCOUNT_NUMBER}.json",
             "required": false
         },
         "EASE_LOGGER": {

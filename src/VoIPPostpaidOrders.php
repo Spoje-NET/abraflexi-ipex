@@ -18,7 +18,7 @@ namespace SpojeNet\AbraFlexiIpex;
 use Ease\Shared;
 
 require_once '../vendor/autoload.php';
-\define('EASE_APPNAME', 'IPEXPostPaidInvoices');
+\define('EASE_APPNAME', 'IPEXPostPaidOrders');
 $exitcode = 0;
 /**
  * Get today's Statements list.
@@ -41,7 +41,7 @@ if (Shared::cfg('APP_DEBUG', false)) {
     $ipexer->logBanner();
 }
 
-$report = $ipexer->processIpexPostpaidInvoices();
+$report = $ipexer->processIpexPostpaidOrders($ipexer->getIpexInvoices());
 
 $written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
 $ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
