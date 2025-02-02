@@ -88,8 +88,10 @@ class Ipex extends \Ease\Sand
 
             $order = $this->createOrder($invoiceRaw);
 
-            if ($order) {
+            if ($order->getRecordI()) {
                 $result[(string) $invoiceRaw['externId']]['order'] = $order->getRecordCode();
+            } else {
+                $result[(string) $invoiceRaw['externId']]['order'] = _('No Calls');
             }
         }
 
@@ -108,7 +110,7 @@ class Ipex extends \Ease\Sand
         $calls = $this->getUnivoicedCalls();
 
         $callsByCustomer = [];
-
+        $result = [];
         if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
             foreach ($calls as $call) {
                 $callsByCustomer[(string) $call['firma']][$call['kod']] = $call;
@@ -238,7 +240,7 @@ class Ipex extends \Ease\Sand
      *
      * @return \SpojeNet\AbraFlexiIpex\FakturaVydana
      */
-    public function createOrder($invoiceRaw)
+    public function createOrder(array $invoiceRaw)
     {
         $adresar = new \AbraFlexi\Adresar();
         $startDate = new \DateTime($invoiceRaw['dateStart']);
@@ -293,11 +295,11 @@ class Ipex extends \Ease\Sand
             $this->sendCallListByMail($order, $callLogFilename);
 
             unlink($callLogFilename);
-
-            return $order;
+        } else {
+            $order->addStatusMessage($this->counter.$invoiceRaw['customerName'].' 0,-', 'debug');
         }
 
-        $order->addStatusMessage($this->counter.$invoiceRaw['customerName'].' 0,-', 'debug');
+        return $order;
     }
 
     public static function formatDate($dateTime)
@@ -314,7 +316,7 @@ class Ipex extends \Ease\Sand
      *
      * @return string binary PDF
      */
-    public function pdfCallLog(int $ipexCustomerID, $customerName, $offset = 1)
+    public function pdfCallLog(int $ipexCustomerID, string $customerName, int $offset = 1)
     {
         $caller = new \IPEXB2B\Calls();
 
@@ -370,14 +372,12 @@ class Ipex extends \Ease\Sand
             \Ease\Functions::rip($customerName),
         )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
 
-        if (
-            file_put_contents(
+
+        return file_put_contents(
                 $pdfFilename,
                 $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
-            )
-        ) {
-            return $pdfFilename;
-        }
+            ) ? $pdfFilename : '';
+
     }
 
     /**
@@ -386,6 +386,8 @@ class Ipex extends \Ease\Sand
     public function addCallLogAsItems($order): void
     {
         $caller = new \IPEXB2B\Calls();
+
+        $startDate = new \DateTime();
 
         $calls = $caller->getCallsForCustomer(
             $startDate,
