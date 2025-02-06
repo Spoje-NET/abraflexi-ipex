@@ -33,6 +33,7 @@ class Ipex extends \Ease\Sand
     private string $counter = '';
     private ObjednavkaPrijata $order;
     private $ipexUsers = [];
+    private $scope;
 
     public function __construct()
     {
@@ -44,7 +45,7 @@ class Ipex extends \Ease\Sand
      *
      * @return array<int, array<string, string>>
      */
-    public function getIpexInvoices(): array|bool
+    public function getIpexInvoices($scope = 'last_month'): array|bool
     {
         $grabber = new \IPEXB2B\ApiClient('', ['section' => 'invoices']);
 
@@ -59,6 +60,117 @@ class Ipex extends \Ease\Sand
         return $grabber->requestData('postpaid');
     }
 
+    
+    /**
+     * Prepare processing interval.
+     *
+     * @param string $scope
+     *
+     * @throws \Exception
+     */
+    public function setScope($scope): void
+    {
+        switch ($scope) {
+            case 'yesterday':
+                $this->since = (new \DateTime('yesterday'))->setTime(0, 0);
+                $this->until = (new \DateTime('yesterday'))->setTime(23, 59);
+
+                break;
+            case 'current_month':
+                $this->since = new \DateTime('first day of this month');
+                $this->until = new \DateTime();
+
+                break;
+            case 'last_month':
+                $this->since = new \DateTime('first day of last month');
+                $this->until = new \DateTime('last day of last month');
+
+                break;
+            case 'last_week':
+                $this->since = new \DateTime('first day of last week');
+                $this->until = new \DateTime('last day of last week');
+
+                break;
+            case 'last_two_months':
+                $this->since = (new \DateTime('first day of last month'))->modify('-1 month');
+                $this->until = (new \DateTime('last day of last month'));
+
+                break;
+            case 'previous_month':
+                $this->since = new \DateTime('first day of -2 month');
+                $this->until = new \DateTime('last day of -2 month');
+
+                break;
+            case 'two_months_ago':
+                $this->since = new \DateTime('first day of -3 month');
+                $this->until = new \DateTime('last day of -3 month');
+
+                break;
+            case 'this_year':
+                $this->since = new \DateTime('first day of January '.date('Y'));
+                $this->until = new \DateTime('last day of December'.date('Y'));
+
+                break;
+            case 'January':  // 1
+            case 'February': // 2
+            case 'March':    // 3
+            case 'April':    // 4
+            case 'May':      // 5
+            case 'June':     // 6
+            case 'July':     // 7
+            case 'August':   // 8
+            case 'September':// 9
+            case 'October':  // 10
+            case 'November': // 11
+            case 'December': // 12
+                $this->since = new \DateTime('first day of '.$scope.' '.date('Y'));
+                $this->until = new \DateTime('last day of '.$scope.' '.date('Y'));
+
+                break;
+            case 'auto':
+                //  "EAN", "code", "company", "dateFrom", "dateTill", "dic", "ico", "id", "internet", "lastChanges", "name", "storage", "store".
+                $latestRecord = $this->getColumnsFromPohoda();
+
+                if (\array_key_exists(0, $latestRecord) && \array_key_exists('lastUpdate', $latestRecord[0])) {
+                    $this->since = $latestRecord[0]['lastUpdate'];
+                } else {
+                    $this->addStatusMessage('Previous record for "auto since" not found. Defaulting to today\'s 00:00', 'warning');
+                    $this->since = (new \DateTime())->setTime(0, 0);
+                }
+
+                $this->until = new \DateTime(); // Now
+
+                break;
+
+            default:
+                if (strstr($scope, '>')) {
+                    [$begin, $end] = explode('>', $scope);
+                    $this->since = new \DateTime($begin);
+                    $this->until = new \DateTime($end);
+                } else {
+                    if (preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/', $scope)) {
+                        $this->since = new \DateTime($scope);
+                        $this->until = (new \DateTime($scope))->setTime(23, 59, 59, 999);
+
+                        break;
+                    }
+
+                    throw new \Exception('Unknown scope '.$scope);
+                }
+
+                break;
+        }
+
+        if ($scope !== 'auto' && $scope !== 'today' && $scope !== 'yesterday') {
+            $this->since = $this->since->setTime(0, 0);
+            $this->until = $this->until->setTime(23, 59, 59, 999);
+        }
+
+        $this->scope = $scope;
+        //        $this->obtainer->setScope(\Ease\Shared::cfg('STATEMENT_IMPORT_SCOPE', 'last_month'));
+    }
+    
+    
     /**
      * Obtain Customer List.
      *

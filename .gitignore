@@ -18,3 +18,5 @@ composer.phar
 /debian/debhelper-build-stamp
 /debian/multiflexi-abraflexi-ipex.debhelper.log
 /debian/abraflexi-ipex.debhelper.log
+/.phpunit.cache/
+/.phpunit.result.cache

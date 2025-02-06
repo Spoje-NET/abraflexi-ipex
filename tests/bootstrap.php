@@ -15,7 +15,12 @@ declare(strict_types=1);
 /**
  * @author Vítězslav Dvořák <info@vitexsoftware.cz>
  */
-// TODO: check include path
-// ini_set('include_path', ini_get('include_path'));
+require_once file_exists('../vendor/autoload.php') ? '../vendor/autoload.php' : './vendor/autoload.php';
 
-// put your code here
+\Ease\Shared::init(
+        [
+            'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
+            'ABRAFLEXI_URL', 'ABRAFLEXI_LOGIN', 'ABRAFLEXI_PASSWORD', 'ABRAFLEXI_COMPANY',
+        ],
+        file_exists('../.env') ? '../.env' : './.env'
+);

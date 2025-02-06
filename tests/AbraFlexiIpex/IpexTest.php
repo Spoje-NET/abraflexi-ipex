@@ -16,19 +16,19 @@ declare(strict_types=1);
 namespace Test\SpojeNet\AbraFlexiIpex;
 
 use PHPUnit\Framework\TestCase;
-use SpojeNet\AbraFlexiIpex\IPEX;
+use SpojeNet\AbraFlexiIpex\Ipex;
 
 /**
  * Class IPEX.
  *
  * @covers \SpojeNet\AbraFlexiIpex\IPEX
  */
-class IPEXTest extends TestCase
+class IpexTest extends TestCase
 {
     /**
      * @var IPEX an instance of "IPEX" to test
      */
-    private IPEX $object;
+    private Ipex $object;
 
     /**
      * {@inheritDoc}
@@ -36,7 +36,7 @@ class IPEXTest extends TestCase
     protected function setUp(): void
     {
         /** @todo Maybe add some arguments to this constructor */
-        $this->object = new IPEX();
+        $this->object = new \SpojeNet\AbraFlexiIpex\Ipex();
     }
 
     /**
