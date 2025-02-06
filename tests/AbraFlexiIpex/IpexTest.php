@@ -61,8 +61,13 @@ class IpexTest extends TestCase
      */
     public function testGetUnivoicedCalls(): void
     {
-        /** @todo Complete this unit test method. */
-        $this->markTestIncomplete();
+        $allCalls = $this->object->getUnivoicedCalls();
+        $this->assertIsArray($allCalls);
+        
+        $onlyOneUserCalls = $this->object->getUnivoicedCalls('code:666');
+        $this->assertIsArray($onlyOneUserCalls);
+
+        
     }
 
     /**

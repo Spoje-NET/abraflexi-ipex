@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-01-14 00:30+0100\n"
-"PO-Revision-Date: 2025-01-14 00:30+0100\n"
+"POT-Creation-Date: 2025-02-06 16:02+0100\n"
+"PO-Revision-Date: 2025-02-06 16:03+0100\n"
 "Last-Translator: Vítězslav Dvořák <vitex@vitexsoftware.cz>\n"
 "Language-Team: \n"
 "Language: cs_CZ\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.5\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-Basepath: ../..\n"
 "X-Poedit-SearchPath-0: ../src\n"
@@ -100,41 +100,65 @@ msgstr "vteřina"
 msgid "And"
 msgstr "A"
 
-#: ../src/AbraFlexiIpex/Ipex.php:194
+#: ../src/AbraFlexiIpex/Ipex.php:98
+msgid "No Calls"
+msgstr "Žádné Hovory"
+
+#: ../src/AbraFlexiIpex/Ipex.php:129
+msgid "Unknown AbraFlexi customer. No invoice created."
+msgstr ""
+
+#: ../src/AbraFlexiIpex/Ipex.php:136
+#, php-format
+msgid "Ipex Customer Without externalId: %s"
+msgstr ""
+
+#: ../src/AbraFlexiIpex/Ipex.php:137
+#, fuzzy, php-format
+#| msgid "No LMSid found for customer %s"
+msgid "Not an Ipex customer: %s ?"
+msgstr "Zákazník %s bez LMS id"
+
+#: ../src/AbraFlexiIpex/Ipex.php:262
 msgid "IPEX Postpaid"
 msgstr "IPEX provolané"
 
-#: ../src/AbraFlexiIpex/Ipex.php:267
+#: ../src/AbraFlexiIpex/Ipex.php:335
 msgid "Calls listing"
 msgstr "Výpis volání"
 
-#: ../src/AbraFlexiIpex/Ipex.php:312 ../src/VoIPPrepaidCalls.php:88
+#: ../src/AbraFlexiIpex/Ipex.php:380 ../src/VoIPPrepaidCalls.php:88
 msgid "Calls"
 msgstr "Hovory"
 
-#: ../src/AbraFlexiIpex/Ipex.php:379
+#: ../src/AbraFlexiIpex/Ipex.php:443
 msgid "Listing"
 msgstr "Výpis"
 
-#: ../src/AbraFlexiIpex/Ipex.php:379
+#: ../src/AbraFlexiIpex/Ipex.php:443
 msgid "for"
 msgstr "pro"
 
-#: ../src/AbraFlexiIpex/Ipex.php:391
+#: ../src/AbraFlexiIpex/Ipex.php:455
 #, php-format
 msgid "Customer %s without email address ?!?"
 msgstr "Zákazník %s bez emailové adresy ?!?"
 
-#: ../src/AbraFlexiIpex/Ipex.php:434
+#: ../src/AbraFlexiIpex/Ipex.php:504
+msgid "from"
+msgstr "od"
+
+#: ../src/AbraFlexiIpex/Ipex.php:504
 msgid "to"
 msgstr "do"
 
-#: ../src/AbraFlexiIpex/Ipex.php:458 ../src/AbraFlexiIpex/Ipex.php:464
+#: ../src/AbraFlexiIpex/Ipex.php:536 ../src/AbraFlexiIpex/Ipex.php:538
 #, php-format
 msgid "%s Order %s marked as done"
 msgstr "%s Objednávka %s označena za hotovou"
 
-#: ../src/VoIPPostpaidInvoices.php:47 ../src/VoIPPrepaidCalls.php:112
+#: ../src/VoIPPostpaidInvoices.php:47 ../src/VoIPPostpaidOrders.php:47
+#: ../src/VoIPPrepaidCalls.php:112
 #, php-format
 msgid "Saving result to %s"
 msgstr "Ukládám výsledek do %s"
@@ -242,9 +266,6 @@ msgstr "Předplacené hovory za poslední měsíc"
 #, php-format
 #~ msgid "%s without IPEX extID"
 #~ msgstr "%s bez IPEX extID"
-
-#~ msgid "from"
-#~ msgstr "od"
 
 #~ msgid "Please wait while our salesman contact you."
 #~ msgstr "Prosíme vyčkejte než vás zkontaktuje náš obchodník"
@@ -1787,10 +1808,6 @@ msgstr "Předplacené hovory za poslední měsíc"
 
 #~ msgid "Client Unblocker"
 #~ msgstr "Odblokovač klienta"
-
-#, php-format
-#~ msgid "No LMSid found for customer %s"
-#~ msgstr "Zákazník %s bez LMS id"
 
 #~ msgid "Unblock Net"
 #~ msgstr "Odblokovat NET"
