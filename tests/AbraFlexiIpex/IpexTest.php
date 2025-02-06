@@ -63,11 +63,9 @@ class IpexTest extends TestCase
     {
         $allCalls = $this->object->getUnivoicedCalls();
         $this->assertIsArray($allCalls);
-        
+
         $onlyOneUserCalls = $this->object->getUnivoicedCalls('code:666');
         $this->assertIsArray($onlyOneUserCalls);
-
-        
     }
 
     /**

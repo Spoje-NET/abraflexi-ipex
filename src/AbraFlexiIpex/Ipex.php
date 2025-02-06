@@ -26,7 +26,7 @@ use Ease\Mailer;
  */
 class Ipex extends \Ease\Sand
 {
-    public float $invoicingLimit = 200.0;
+    public float $invoicingLimit = 50.0;
     public FakturaVydana $invoicer;
     public \DateTime $since;
     public \DateTime $until;
@@ -57,11 +57,10 @@ class Ipex extends \Ease\Sand
 
         $grabber->setUrlParams(['monthOffset' => -1]);
 
-        $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 200);
+        $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 50);
 
         return $grabber->requestData('postpaid');
     }
-
 
     /**
      * Obtain Customer List.
@@ -111,20 +110,32 @@ class Ipex extends \Ease\Sand
     {
         $this->ipexUsers = $this->getIpexCustomersByExtCode();
 
-        $calls = $this->getUnivoicedCalls();
+        $allUsersCalls = $this->getUnivoicedCalls();
 
         $callsByCustomer = [];
         $result = [];
 
-        if ($this->uninvoicedAmount($calls) > $this->invoicingLimit) {
-            foreach ($calls as $call) {
+        if ($this->uninvoicedAmount($allUsersCalls)) {
+            foreach ($allUsersCalls as $call) {
                 $callsByCustomer[(string) $call['firma']][$call['kod']] = $call;
             }
 
             foreach ($callsByCustomer as $customer => $calls) {
                 if (\array_key_exists($customer, $this->ipexUsers)) {
-                    if (\AbraFlexi\Functions::uncode($customer)) {
-                        $result[$customer]['invoice'] = $this->createInvoice($calls)->getRecordCode();
+                    $customerCode = \AbraFlexi\Functions::uncode($customer);
+
+                    if ($customerCode) {
+                        $uninvoicedAmount = $this->uninvoicedAmount($calls);
+
+                        if (empty(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST')) || (strstr(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST', ''), $customerCode) === false)) {
+                            if ($uninvoicedAmount > $this->invoicingLimit) {
+                                $result[$customer]['invoice'] = $this->createInvoice($calls)->getRecordCode();
+                            } else {
+                                $result[$customer]['invoice'] = $uninvoicedAmount.' < '.$this->invoicingLimit;
+                            }
+                        } else {
+                            $result[$customer]['invoice'] = 'in ABRAFLEXI_SKIPLIST';
+                        }
                     } else {
                         $this->addStatusMessage(_('Unknown AbraFlexi customer. No invoice created.'), 'warning');
 
@@ -336,7 +347,7 @@ class Ipex extends \Ease\Sand
 
         $report = new \Ease\Container(new \Ease\Html\H2Tag(_('Calls listing')));
         $report->addItem(new \Ease\Html\PTag(
-            $startDate->format('m/d/Y').' - '.$endDate->format('m/d/Y'),
+            self::formatDate($startDate).' - '.self::formatDate($endDate),
         ));
         $report->addItem(new CallsListing(
             $calls,
@@ -506,6 +517,8 @@ class Ipex extends \Ease\Sand
             'Telefonní služby '._('from').' '.self::formatDate($this->since).' '._('to').' '.self::formatDate($this->until),
         );
 
+        $invoice->setDataValue('uvodTxt', 'Fakturujeme Vám hlasové služby');
+
         $invoice->setDataValue('duzpPuv', \AbraFlexi\Functions::dateToFlexiDate($this->until));
 
         if ($invoice->sync()) {
@@ -525,7 +538,6 @@ class Ipex extends \Ease\Sand
             foreach ($callsOrders as $orderCode => $orderData) {
                 $orderHelper->setData($orderData);
                 //                $orderHelper->deleteFromAbraFlexi();
-
                 // https://podpora.flexibee.eu/cs/articles/5917010-zamykani-obdobi-pres-rest-api
 
                 $lockState = $orderHelper->locked();

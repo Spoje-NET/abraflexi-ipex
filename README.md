@@ -39,7 +39,7 @@ The [.env](.env.example) file contains the necessary configuration for the integ
 - `ABRAFLEXI_PRODUCT`: Product code in AbraFlexi
 - `ABRAFLEXI_DOCTYPE`: Document type code in AbraFlexi
 - `ABRAFLEXI_SKIPLIST`: List of items to skip during synchronization
-- `ABRAFLEXI_MINIMAL_INVOICING`: do not create cheap invoices
+- `ABRAFLEXI_MINIMAL_INVOICING`: do not create too low invoices (default is 50))
 - `ABRAFLEXI_CREATE_EMPTY_ORDERS`: just be sure that month was processed
 - `IPEX_URL`: URL of the Ipex API
 - `IPEX_LOGIN`: Login username for Ipex
