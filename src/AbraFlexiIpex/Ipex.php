@@ -43,6 +43,8 @@ class Ipex extends \Ease\Sand
     /**
      * Get IPEX invoices data for last month.
      *
+     * @param mixed $scope
+     *
      * @return array<int, array<string, string>>
      */
     public function getIpexInvoices($scope = 'last_month'): array|bool
@@ -60,7 +62,6 @@ class Ipex extends \Ease\Sand
         return $grabber->requestData('postpaid');
     }
 
-    
     /**
      * Prepare processing interval.
      *
@@ -169,8 +170,7 @@ class Ipex extends \Ease\Sand
         $this->scope = $scope;
         //        $this->obtainer->setScope(\Ease\Shared::cfg('STATEMENT_IMPORT_SCOPE', 'last_month'));
     }
-    
-    
+
     /**
      * Obtain Customer List.
      *
