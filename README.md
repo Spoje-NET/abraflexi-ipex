@@ -63,7 +63,7 @@ To use the `abraflexi-ipex` integration, run the following commands:
 
 Example output:
 
-`
+```
 01/17/2025 21:55:09 ⚙ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ IPEXPostPaidInvoices EaseCore 1.45.0 (PHP 8.2.27)
 01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:01183
 01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:03489
@@ -90,8 +90,7 @@ Example output:
         "invoice": "Not an Ipex customer: code:02509 ?"
     }
 }01/17/2025 21:55:10 🌼 ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Saving result to php://stdout
-
-`
+```
 
 - To send prepaid call list to customer:
 
