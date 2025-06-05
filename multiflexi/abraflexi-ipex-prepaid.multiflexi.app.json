@@ -12,7 +12,7 @@
     "uuid": "74816157-8540-49c7-bfbd-423e8ed4fbfd",
     "environment": {
         "APP_DEBUG": {
-            "type": "checkbox",
+            "type": "bool",
             "description": "Show debug messages",
             "defval": "False",
             "required": false
