@@ -12,7 +12,7 @@
     "uuid": "51b247aa-fd48-44d7-8494-8c86b05e5a66",
     "environment": {
         "APP_DEBUG": {
-            "type": "checkbox",
+            "type": "bool",
             "description": "Show debug messages",
             "defval": "False",
             "required": false
@@ -84,7 +84,7 @@
             "required": true
         },
         "ABRAFLEXI_CREATE_EMPTY_ORDERS": {
-            "type": "checkbox",
+            "type": "bool",
             "description": "Create empty orders",
             "defval": "False",
             "required": false
