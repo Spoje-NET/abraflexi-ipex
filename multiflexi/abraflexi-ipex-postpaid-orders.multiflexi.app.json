@@ -6,9 +6,9 @@
     "cmdparams": "",
     "deploy": "apt install abraflexi-ipex",
     "homepage": "https://github.com/Spoje-NET/abraflexi-ipex",
-    "requirements": "AbraFlexi",
+    "requirements": ["AbraFlexi"],
     "ociimage": "",
-    "topics": "AbraFlexi,Ipex,Invoice",
+    "topics": ["AbraFlexi", "Ipex", "Invoice"],
     "uuid": "51b247aa-fd48-44d7-8494-8c86b05e5a66",
     "environment": {
         "APP_DEBUG": {
