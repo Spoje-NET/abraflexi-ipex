@@ -35,7 +35,7 @@ Shared::init(
 );
 $destination = \array_key_exists('output', $options) ? $options['output'] : Shared::cfg('RESULT_FILE', 'php://stdout');
 \Ease\Locale::singleton(null, '../i18n', 'abraflexi-ipex');
-
+$exitcode = 0;
 $grabber = new \IPEXB2B\ApiClient('', ['section' => 'invoices']);
 
 if (Shared::cfg('APP_DEBUG', false)) {
@@ -101,7 +101,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = $postman->send();
     } else {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = false;
-        $engine->addStatusMessage(
+        $grabber->addStatusMessage(
             $invoiceRaw['customerName'].' without extID',
             'warning',
         );
@@ -109,6 +109,6 @@ foreach ($invoicesRaw as $invoiceRaw) {
 }
 
 $written = file_put_contents($destination, json_encode($jsonReportData, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
-$engine->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
+$grabber->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
 
 exit($exitcode);

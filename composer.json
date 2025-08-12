@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "mpdf/mpdf": "^8.2",
-        "spojenet/flexibee": "^3.4",
+        "spojenet/flexibee": "^3.6",
         "spojenet/ipexb2b": "dev-main",
         "vitexsoftware/ease-html": "^1.40"
     },

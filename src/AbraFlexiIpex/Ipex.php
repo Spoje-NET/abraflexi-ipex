@@ -399,14 +399,14 @@ class Ipex extends \Ease\Sand
     }
 
     /**
-     * @param \AbraFlexi\FakturaVydana $order
+     * @param FakturaVydana $order
      */
     public function addCallLogAsItems($order): void
     {
         $caller = new \IPEXB2B\Calls();
 
         $calls = $caller->getCallsForCustomer(
-            $startDate,
+            $this->since,
             $invoiceRaw['customerId'],
         );
 
@@ -474,14 +474,14 @@ class Ipex extends \Ease\Sand
     /**
      * Create new IPEX Invoice.
      */
-    public function createInvoice(array $callsOrders): \AbraFlexi\FakturaVydana
+    public function createInvoice(array $callsOrders): FakturaVydana
     {
         $invoice = new FakturaVydana();
-        $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\RO::code('FAKTURA')));
+        $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\Code::ensure('FAKTURA')));
 
         $invoice->setDataValue('stavMailK', strtolower(\Ease\Shared::cfg('ABRAFLEXI_SEND', 'false')) === 'true' ? 'stavMail.odeslat' : 'stavMail.neodesilat');
-        $invoice->setDataValue('firma', \AbraFlexi\RO::code((string) current($callsOrders)['firma']));
-        $invoice->setDataValue('typUcOp', \AbraFlexi\RO::code('TRŽBA SLUŽBY INT'));
+        $invoice->setDataValue('firma', \AbraFlexi\Code::ensure((string) current($callsOrders)['firma']));
+        $invoice->setDataValue('typUcOp', \AbraFlexi\Code::ensure('TRŽBA SLUŽBY INT'));
 
         foreach ($callsOrders as $orderCode => $orderData) {
             if (isset($this->since) === false || $this->since > $orderData['datVyst']) {
@@ -494,10 +494,10 @@ class Ipex extends \Ease\Sand
 
             if (!empty($orderData['polozkyDokladu'])) {
                 foreach ($orderData['polozkyDokladu'] as $orderItem) {
-                    if ($orderItem['kod'] === \AbraFlexi\Functions::uncode(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'))) {
+                    if ($orderItem['kod'] === \AbraFlexi\Code::strip(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'))) {
                         unset($orderItem['id'], $orderItem['kod']);
 
-                        $orderItem['cenik'] = \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'));
+                        $orderItem['cenik'] = \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'));
                         $invoice->addArrayToBranch($orderItem);
                     } else {
                         $invoice->addStatusMessage(
@@ -519,7 +519,7 @@ class Ipex extends \Ease\Sand
 
         $invoice->setDataValue('uvodTxt', 'Fakturujeme Vám hlasové služby');
 
-        $invoice->setDataValue('duzpPuv', \AbraFlexi\Functions::dateToFlexiDate($this->until));
+        $invoice->setDataValue('duzpPuv', \AbraFlexi\Date::fromDateTime($this->until));
 
         if ($invoice->sync()) {
             $invoice->addStatusMessage(
@@ -546,7 +546,7 @@ class Ipex extends \Ease\Sand
                     $orderHelper->unlock();
                 }
 
-                if ($orderHelper->sync(['id' => \AbraFlexi\RO::code($orderCode), 'typDokl' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])) {
+                if ($orderHelper->sync(['id' => \AbraFlexi\Code::ensure($orderCode), 'typDokl' => \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'OBP_VOIP')), 'stavUzivK' => 'stavDoklObch.hotovo'])) {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'success');
                 } else {
                     $orderHelper->addStatusMessage(sprintf(_('%s Order %s marked as done'), $orderData['firma']->showAs, $orderCode), 'error');
@@ -564,10 +564,10 @@ class Ipex extends \Ease\Sand
     /**
      * @param array<string, string> $forceData initial data
      */
-    public function getInvoicer(array $forceData = []): \AbraFlexi\FakturaVydana
+    public function getInvoicer(array $forceData = []): FakturaVydana
     {
         if (isset($this->invoicer) === false) {
-            $this->invoicer = new \AbraFlexi\FakturaVydana($forceData);
+            $this->invoicer = new FakturaVydana($forceData);
         }
 
         return $this->invoicer;
@@ -576,10 +576,10 @@ class Ipex extends \Ease\Sand
     /**
      * @param array<string, string> $forceData initial data
      */
-    public function getOrderer(array $forceData = []): \AbraFlexi\ObjednavkaPrijata
+    public function getOrderer(array $forceData = []): ObjednavkaPrijata
     {
         if (isset($this->order) === false) {
-            $this->order = new \AbraFlexi\ObjednavkaPrijata($forceData);
+            $this->order = new ObjednavkaPrijata($forceData);
         } else {
             $this->order->dataReset();
             $this->order->setData($forceData);

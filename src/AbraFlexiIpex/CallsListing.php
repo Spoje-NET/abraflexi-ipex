@@ -109,11 +109,11 @@ class CallsListing extends \Ease\Html\TableTag
         foreach ($periods as $name => $dur) {
             $div = floor($duration / $dur);
 
-            if ($div === 0) {
+            if (empty($div)) {
                 continue;
             }
 
-            if ($div === 1) {
+            if ((int) $div === 1) {
                 $parts[] = $div.' '.$name;
             } else {
                 $parts[] = $div.' '.$name.'s';
