@@ -750,29 +750,30 @@
         },
         {
             "name": "spojenet/flexibee",
-            "version": "3.4.0",
+            "version": "3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Spoje-NET/php-abraflexi.git",
-                "reference": "3da2fbd68a8c201ac29452adc61b0fc5602ad21f"
+                "reference": "94ba54a08b66945caa2e79123a4d75bc4974d609"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Spoje-NET/php-abraflexi/zipball/3da2fbd68a8c201ac29452adc61b0fc5602ad21f",
-                "reference": "3da2fbd68a8c201ac29452adc61b0fc5602ad21f",
+                "url": "https://api.github.com/repos/Spoje-NET/php-abraflexi/zipball/94ba54a08b66945caa2e79123a4d75bc4974d609",
+                "reference": "94ba54a08b66945caa2e79123a4d75bc4974d609",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-gettext": "*",
                 "ext-json": "*",
-                "vitexsoftware/ease-core": "^1.45"
+                "php": "^8.1",
+                "vitexsoftware/ease-core": "^1.48"
             },
             "require-dev": {
-                "ergebnis/composer-normalize": "^2.43",
-                "ergebnis/php-cs-fixer-config": "^6.34",
+                "ergebnis/composer-normalize": "^2.47",
+                "ergebnis/php-cs-fixer-config": "^6.46",
                 "ext-iconv": "*",
-                "friendsofphp/php-cs-fixer": "^3.61",
+                "friendsofphp/php-cs-fixer": "^3.75",
                 "phing/phing": "*",
                 "phpstan/phpstan": "*",
                 "phpunit/phpunit": "*",
@@ -803,9 +804,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Spoje-NET/php-abraflexi/issues",
-                "source": "https://github.com/Spoje-NET/php-abraflexi/tree/3.4.0"
+                "source": "https://github.com/Spoje-NET/php-abraflexi/tree/3.6.0"
             },
-            "time": "2025-01-15T23:58:54+00:00"
+            "time": "2025-08-09T21:20:37+00:00"
         },
         {
             "name": "spojenet/ipexb2b",
@@ -859,16 +860,16 @@
         },
         {
             "name": "vitexsoftware/ease-core",
-            "version": "1.45.0",
+            "version": "1.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/VitexSoftware/php-ease-core.git",
-                "reference": "eb8c99a86afde580b6451cc4c45753ab6ee5bc00"
+                "reference": "b9d31cf07d62c1011a50f490f3801e7845dafdbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/VitexSoftware/php-ease-core/zipball/eb8c99a86afde580b6451cc4c45753ab6ee5bc00",
-                "reference": "eb8c99a86afde580b6451cc4c45753ab6ee5bc00",
+                "url": "https://api.github.com/repos/VitexSoftware/php-ease-core/zipball/b9d31cf07d62c1011a50f490f3801e7845dafdbc",
+                "reference": "b9d31cf07d62c1011a50f490f3801e7845dafdbc",
                 "shasum": ""
             },
             "require": {
@@ -887,6 +888,7 @@
                 "friendsofphp/php-cs-fixer": "^3.61",
                 "phpstan/phpstan": "*",
                 "phpunit/phpunit": "*",
+                "rector/rector": "^2.0",
                 "roave/security-advisories": "dev-latest"
             },
             "type": "library",
@@ -911,7 +913,7 @@
             "homepage": "http://v.s.cz/ease.php",
             "support": {
                 "issues": "https://github.com/VitexSoftware/php-ease-core/issues",
-                "source": "https://github.com/VitexSoftware/php-ease-core/tree/1.45.0"
+                "source": "https://github.com/VitexSoftware/php-ease-core/tree/1.48"
             },
             "funding": [
                 {
@@ -919,7 +921,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2024-11-15T01:24:15+00:00"
+            "time": "2025-04-17T17:51:01+00:00"
         },
         {
             "name": "vitexsoftware/ease-html",
