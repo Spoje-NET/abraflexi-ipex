@@ -925,25 +925,26 @@
         },
         {
             "name": "vitexsoftware/ease-html",
-            "version": "1.40.2",
+            "version": "1.40.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/VitexSoftware/php-ease-html.git",
-                "reference": "6d3445a0e4359fb22ec6d9e97393f3383f67e1fe"
+                "reference": "10ed0bd0b30e2f3aed91471f8dbcb40ed692c06a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/VitexSoftware/php-ease-html/zipball/6d3445a0e4359fb22ec6d9e97393f3383f67e1fe",
-                "reference": "6d3445a0e4359fb22ec6d9e97393f3383f67e1fe",
+                "url": "https://api.github.com/repos/VitexSoftware/php-ease-html/zipball/10ed0bd0b30e2f3aed91471f8dbcb40ed692c06a",
+                "reference": "10ed0bd0b30e2f3aed91471f8dbcb40ed692c06a",
                 "shasum": ""
             },
             "require": {
-                "vitexsoftware/ease-core": "^1.45"
+                "php": ">=8.1",
+                "vitexsoftware/ease-core": "^1.49"
             },
             "require-dev": {
-                "ergebnis/composer-normalize": "^2.43",
-                "ergebnis/php-cs-fixer-config": "^6.34",
-                "friendsofphp/php-cs-fixer": "^3.61",
+                "ergebnis/composer-normalize": "^2.48",
+                "ergebnis/php-cs-fixer-config": "^6.53",
+                "friendsofphp/php-cs-fixer": "^3.87",
                 "phpstan/phpstan": "*",
                 "phpunit/phpunit": "*"
             },
@@ -967,7 +968,7 @@
             "description": "Set of HTML rendering objects",
             "support": {
                 "issues": "https://github.com/VitexSoftware/php-ease-html/issues",
-                "source": "https://github.com/VitexSoftware/php-ease-html/tree/1.40.2"
+                "source": "https://github.com/VitexSoftware/php-ease-html/tree/1.40.5"
             },
             "funding": [
                 {
@@ -975,7 +976,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2024-11-27T11:04:45+00:00"
+            "time": "2025-09-15T15:06:24+00:00"
         }
     ],
     "packages-dev": [
