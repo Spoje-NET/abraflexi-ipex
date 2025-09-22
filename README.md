@@ -19,8 +19,10 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 ## Features
 
 - Generate AbraFlexi Orders from Ipex Calls & send Call List to customer.
-- Generate AbraFlexi Invoices from AbraFlexi orders when amount reach treshold.
+- Generate AbraFlexi Invoices from AbraFlexi orders when amount reach threshold.
 - Send pre-paid Call list to customer.
+
+> Czech documentation for the invoicing threshold logic is available in `README.cs.md`.
 
 ## Configuration
 
