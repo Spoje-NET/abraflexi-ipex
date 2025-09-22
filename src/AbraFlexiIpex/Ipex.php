@@ -473,6 +473,8 @@ class Ipex extends \Ease\Sand
 
     /**
      * Create new IPEX Invoice.
+     *
+     * @param array<string, array<string, mixed>> $callsOrders Array of order data indexed by order code
      */
     public function createInvoice(array $callsOrders): FakturaVydana
     {
@@ -489,7 +491,7 @@ class Ipex extends \Ease\Sand
             }
 
             if (isset($this->until) === false || $this->until < $orderData['datVyst']) {
-                $this->until = new $orderData['datVyst']();
+                $this->until = $orderData['datVyst'];
             }
 
             if (!empty($orderData['polozkyDokladu'])) {
