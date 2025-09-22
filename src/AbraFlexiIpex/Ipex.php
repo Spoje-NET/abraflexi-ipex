@@ -475,8 +475,6 @@ class Ipex extends \Ease\Sand
      * Create new IPEX Invoice.
      *
      * @param array<string, array<string, mixed>> $callsOrders Array of order data indexed by order code
-     *
-     * @return FakturaVydana
      */
     public function createInvoice(array $callsOrders): FakturaVydana
     {
