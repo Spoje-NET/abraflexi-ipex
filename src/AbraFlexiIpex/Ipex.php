@@ -32,8 +32,13 @@ class Ipex extends \Ease\Sand
     public \DateTime $until;
     private string $counter = '';
     private ObjednavkaPrijata $order;
-    private $ipexUsers = [];
-    private $scope;
+
+    /**
+     * List of IPEX users indexed by external code.
+     *
+     * @var array<int|string, mixed>
+     */
+    private array $ipexUsers = [];
 
     public function __construct()
     {
@@ -41,21 +46,57 @@ class Ipex extends \Ease\Sand
     }
 
     /**
+     * Get the date of the last generated order.
+     */
+    public function getLastOrderDate(): ?\DateTime
+    {
+        $orders = $this->getUsersPreparedOrders();
+        $lastDate = null;
+
+        foreach ($orders as $order) {
+            if (!empty($order['datVyst'])) {
+                $dateValue = $order['datVyst'];
+
+                if ($dateValue instanceof \AbraFlexi\Date) {
+                    $dateValue = method_exists($dateValue, 'format') ? $dateValue->format('Y-m-d H:i:s') : (string) $dateValue;
+                }
+
+                $orderDate = new \DateTime((string) $dateValue);
+
+                if ($lastDate === null || $orderDate > $lastDate) {
+                    $lastDate = $orderDate;
+                }
+            }
+        }
+
+        return $lastDate;
+    }
+
+    /**
      * Get IPEX invoices data for last month.
      *
-     * @param mixed $scope
+     * @param mixed $periodOptions
      *
      * @return array<int, array<string, string>>
      */
-    public function getIpexInvoices($scope = 'last_month'): array|bool
+    /**
+     * Get IPEX invoices data for a custom period.
+     *
+     * @param array $periodOptions ['monthOffset'=>int]
+     *
+     * @return array<int, array<string, string>>|bool
+     */
+    public function getIpexInvoices($periodOptions = []): array|bool
     {
         $grabber = new \IPEXB2B\ApiClient('', ['section' => 'invoices']);
 
-        $this->since = new \DateTime('first day of last month');
-        $this->until = new \DateTime('last day of last month');
-        //        $grabber->setUrlParams(['dateFrom' => $this->since->format(\DateTime::ATOM),'dateTo' => $this->until->format(\DateTime::ATOM)]);
+        $monthOffset = $periodOptions['monthOffset'] ?? -1;
 
-        $grabber->setUrlParams(['monthOffset' => -1]);
+        $this->since = new \DateTime('first day of this month');
+        $this->since->modify((string) $monthOffset.' month');
+        $this->until = clone $this->since;
+        $this->until->modify('last day of this month');
+        $grabber->setUrlParams(['monthOffset' => $monthOffset]);
 
         $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 50);
 
@@ -77,13 +118,14 @@ class Ipex extends \Ease\Sand
     /**
      * Get Postpaid Calls and save it to Orders.
      *
-     * @param array<int, array<string, string>> $invoicesRaw
+     * @param array<int, array<string, string>> $invoicesRaw Array of raw invoice data
      *
-     * @return array<string, array> Description
+     * @return array<string, array<string, string>> Array indexed by externId with order info
      */
     public function processIpexPostpaidOrders(array $invoicesRaw): array
     {
         $position = 0;
+        $result = []; // Initialize result as an empty array
 
         foreach ($invoicesRaw as $invoiceRaw) {
             $result[(string) $invoiceRaw['externId']] = [];
@@ -93,6 +135,7 @@ class Ipex extends \Ease\Sand
 
             if ($order->getRecordId()) {
                 $result[(string) $invoiceRaw['externId']]['order'] = $order->getRecordCode();
+                $result[(string) $invoiceRaw['externId']]['amount'] = $order->getDataValue('sumZklZakl');
             } else {
                 $result[(string) $invoiceRaw['externId']]['order'] = _('No Calls');
             }
@@ -273,20 +316,25 @@ class Ipex extends \Ease\Sand
             'popis' => _('IPEX Postpaid'),
         ]);
 
-        if ($adresar->recordExists(\AbraFlexi\Functions::code($invoiceRaw['externId']))) {
-            $order->setDataValue('firma', \AbraFlexi\Functions::code($invoiceRaw['externId']));
+        if ($adresar->recordExists(\AbraFlexi\Code::ensure($invoiceRaw['externId']))) {
+            $order->setDataValue('firma', \AbraFlexi\Code::ensure($invoiceRaw['externId']));
         } else {
             $order->setDataValue('nazFirmy', $invoiceRaw['customerName']);
             $order->setDataValue('ulice', $invoiceRaw['street']);
             $order->setDataValue('psc', $invoiceRaw['zipCode']);
             $order->setDataValue('mesto', $invoiceRaw['city']);
-            $order->setDataValue('poznam', 'Ipex: '.$invoiceRaw['customerId'].' '.$invoiceRaw['note']);
+            $order->setDataValue('datObj', $invoiceRaw['datetime']);
+            $order->setDataValue(
+                'poznam',
+                'Ipex: '.$invoiceRaw['customerId'].' '.$invoiceRaw['note']
+            .(\Ease\Shared::cfg('MULTIFLEXI_JOB_ID', '') ? "\nJob ID: ".\Ease\Shared::cfg('MULTIFLEXI_JOB_ID', '') : ''),
+            );
         }
 
         $pricelistItem = [
             'cenaMj' => $invoiceRaw['price'],
             'nazev' => 'Telefonní služby od '.self::formatDate($startDate).' do '.self::formatDate($endDate),
-            'cenik' => \AbraFlexi\Functions::code(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
+            'cenik' => \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
             'stitky' => 'API_IPEX',
         ];
         $order->setDataValue('popis', $pricelistItem['nazev']);
@@ -399,15 +447,18 @@ class Ipex extends \Ease\Sand
     }
 
     /**
-     * @param FakturaVydana $order
+     * Add call log as items to the given order.
+     *
+     * @param FakturaVydana $order      the order to add call log items to
+     * @param int           $customerId the raw invoice data containing customerId
      */
-    public function addCallLogAsItems($order): void
+    public function addCallLogAsItems($order, array $customerId): void
     {
         $caller = new \IPEXB2B\Calls();
 
         $calls = $caller->getCallsForCustomer(
             $this->since,
-            $invoiceRaw['customerId'],
+            $customerId,
         );
 
         $callsByNumber = [];

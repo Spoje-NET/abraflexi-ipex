@@ -23,7 +23,7 @@ $exitcode = 0;
 /**
  * Get today's Statements list.
  */
-$options = getopt('o::e::', ['output::environment::']);
+$options = getopt('o::e::m::f::t::c', ['output::environment::', 'monthOffset::', 'continue']);
 Shared::init(
     [
         'IPEX_URL', 'IPEX_LOGIN', 'IPEX_PASSWORD',
@@ -41,7 +41,39 @@ if (Shared::cfg('APP_DEBUG', false)) {
     $ipexer->logBanner();
 }
 
-$report = $ipexer->processIpexPostpaidOrders($ipexer->getIpexInvoices());
+$monthOffset = isset($options['monthOffset']) ? (int) $options['monthOffset'] : (isset($options['m']) ? (int) $options['m'] : -1);
+$dateFrom = $options['dateFrom'] ?? ($options['f'] ?? null);
+$dateTo = $options['dateTo'] ?? ($options['t'] ?? null);
+
+if (\array_key_exists('continue', $options) || \array_key_exists('c', $options)) {
+    // Find the last generated order and set the next period
+
+    $lastOrderDate = $ipexer->getLastOrderDate();
+
+    if ($lastOrderDate) {
+        // If $lastOrderDate is a DateTime object, convert to string
+        if ($lastOrderDate instanceof \DateTimeInterface) {
+            $lastOrderDateStr = $lastOrderDate->format('Y-m-d');
+        } else {
+            $lastOrderDateStr = (string) $lastOrderDate;
+        }
+
+        $lastOrder = new \DateTime($lastOrderDateStr);
+        $now = new \DateTime();
+        $monthOffset = -1 * (($now->format('Y') - $lastOrder->format('Y')) * 12 + ($now->format('n') - $lastOrder->format('n')));
+
+        // Ensure at least -1 month offset
+        if ($monthOffset > -1) {
+            $monthOffset = -1;
+        }
+    } else {
+        $monthOffset = -1;
+    }
+}
+
+$report = $ipexer->processIpexPostpaidOrders($ipexer->getIpexInvoices([
+    'monthOffset' => $monthOffset,
+]));
 
 $written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
 $ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');

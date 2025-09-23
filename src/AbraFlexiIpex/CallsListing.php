@@ -122,6 +122,10 @@ class CallsListing extends \Ease\Html\TableTag
             $duration %= $dur;
         }
 
+        if (empty($parts)) {
+            return '0 '._('seconds');
+        }
+
         $last = array_pop($parts);
 
         return empty($parts) ? $last : implode(', ', $parts).' '._('And').' '.$last;
