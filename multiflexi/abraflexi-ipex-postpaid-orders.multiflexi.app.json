@@ -10,6 +10,9 @@
     "ociimage": "",
     "topics": ["AbraFlexi", "Ipex", "Invoice"],
     "uuid": "51b247aa-fd48-44d7-8494-8c86b05e5a66",
+    "produces": {
+        "orders": "AbraFlexi orders created from IPEX calls"
+    },
     "environment": {
         "APP_DEBUG": {
             "type": "bool",
@@ -20,7 +23,13 @@
         "RESULT_FILE": {
             "type": "string",
             "description": "write output json data to",
-            "defval": "prepaid_ipex_to_abraflexi_{ABRAFLEXI_COMPANY}_orders.json",
+            "defval": "multiflexi_ipex_orders_{ABRAFLEXI_COMPANY}.json",
+            "required": false
+        },
+        "MULTIFLEXI_REPORT_FORMAT": {
+            "type": "bool",
+            "description": "Generate MultiFlexi-compliant report format",
+            "defval": "True",
             "required": false
         },
         "EASE_LOGGER": {

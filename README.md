@@ -18,11 +18,21 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 
 ## Features
 
-- Generate AbraFlexi Orders from Ipex Calls & send Call List to customer.
-- Generate AbraFlexi Invoices from AbraFlexi orders when amount reach threshold.
-- Send pre-paid Call list to customer.
+- **Generate AbraFlexi Orders** from Ipex Calls & send Call List to customer
+- **Generate AbraFlexi Invoices** from AbraFlexi orders when amount reach threshold
+- **Send pre-paid Call list** to customer
+- **Enhanced Audit Reporting** with comprehensive transaction tracking
+- **MultiFlexi Report Schema** compliance for standardized integration
+- **Duplicate Prevention** for orders and invoices
+- **Any-time Execution** with proper period-specific processing
+- **Detailed Metrics** and status reporting for compliance
 
 > Czech documentation for the invoicing threshold logic is available in `README.cs.md`.
+
+### New in Version 1.2.0
+
+- **[Enhanced Audit Reporting](AUDIT_REPORTS.md)**: Comprehensive transaction tracking and detailed reporting
+- **[MultiFlexi Report Format](MULTIFLEXI_REPORTS.md)**: Standardized reporting for MultiFlexi platform integration
 
 ## Configuration
 
@@ -55,12 +65,21 @@ To use the `abraflexi-ipex` integration, run the following commands:
 
     ```sh
     abraflexi-ipex-postpaid-orders
+    
+    # Process specific month (any time execution)
+    abraflexi-ipex-postpaid-orders -m -2  # Process 2 months ago
+    
+    # Generate MultiFlexi-compliant report
+    abraflexi-ipex-postpaid-orders -o multiflexi_orders_report.json
     ```
 
 - For previously saved orders to generate invoices:
 
     ```sh
-    abraflexi-ipex-prepaid-invoices
+    abraflexi-ipex-postpaid-invoices
+    
+    # Generate MultiFlexi-compliant report
+    abraflexi-ipex-postpaid-invoices -o multiflexi_invoices_report.json
     ```
 
 Example output:

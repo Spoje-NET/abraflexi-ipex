@@ -75,7 +75,25 @@ $report = $ipexer->processIpexPostpaidOrders($ipexer->getIpexInvoices([
     'monthOffset' => $monthOffset,
 ]));
 
-$written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
-$ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
+// Display audit summary if debug mode or verbose output
+if (Shared::cfg('APP_DEBUG', false) || Shared::cfg('EASE_LOGGER', '') === 'console') {
+    $ipexer->displayAuditSummary($report, 'orders');
+}
+
+// Determine output format based on destination or environment
+$useMultiFlexiFormat = Shared::cfg('MULTIFLEXI_REPORT_FORMAT', false) || 
+                      (strpos($destination, 'multiflexi') !== false) ||
+                      (getenv('MULTIFLEXI') !== false);
+
+if ($useMultiFlexiFormat) {
+    // Generate MultiFlexi-compliant report
+    $multiFlexiReport = $ipexer->generateMultiFlexiReport($report, 'orders', $exitcode);
+    $written = file_put_contents($destination, json_encode($multiFlexiReport, JSON_PRETTY_PRINT));
+    $ipexer->addStatusMessage(sprintf('MultiFlexi report saved to %s', $destination), $written ? 'success' : 'error');
+} else {
+    // Generate standard detailed audit report
+    $written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
+    $ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
+}
 
 exit($exitcode);

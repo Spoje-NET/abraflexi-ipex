@@ -10,6 +10,8 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 1. **Postpaid Orders**: Fetch Ipex call data → Generate AbraFlexi orders → Send call lists to customers
 2. **Invoice Generation**: Process existing AbraFlexi orders → Generate invoices when amounts reach threshold
 3. **Prepaid Processing**: Send prepaid call lists to customers
+4. **Audit Reporting**: Generate comprehensive transaction reports with duplicate prevention
+5. **MultiFlexi Integration**: Schema-compliant reporting for standardized platform integration
 
 ## Development Commands
 
@@ -40,6 +42,11 @@ abraflexi-ipex-postpaid-orders    # Generate orders from postpaid calls
 abraflexi-ipex-postpaid-invoices  # Generate invoices from orders
 abraflexi-ipex-prepaid            # Send prepaid call lists
 abraflexi-ipex-setup              # Initial setup/configuration
+
+# Enhanced features (v1.2.0+)
+abraflexi-ipex-postpaid-orders -m -2                      # Process specific month
+abraflexi-ipex-postpaid-orders -o multiflexi_report.json  # MultiFlexi format
+MULTIFLEXI_REPORT_FORMAT=true abraflexi-ipex-postpaid-orders  # Force MultiFlexi format
 ```
 
 ## Architecture & Structure

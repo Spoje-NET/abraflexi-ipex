@@ -1,4 +1,17 @@
-abraflexi-ipex (1.1.0) UNRELEASED; urgency=medium
+abraflexi-ipex (1.2.0) unstable; urgency=medium
+
+  * Enhanced audit reporting with comprehensive transaction tracking
+  * MultiFlexi report schema compliance for standardized integration
+  * Duplicate prevention for orders and invoices
+  * Improved date handling for any-time execution
+  * Period-specific processing with proper monthOffset handling
+  * Added detailed metrics and status reporting
+  * Console audit summaries for debugging
+  * Backward compatibility maintained
+
+ -- Vitex <vitezslav.dvorak@spojenet.cz>  Tue, 24 Sep 2025 11:26:00 +0100
+
+abraflexi-ipex (1.1.0) unstable; urgency=medium
 
   * Invoice Skiplist implemented
 

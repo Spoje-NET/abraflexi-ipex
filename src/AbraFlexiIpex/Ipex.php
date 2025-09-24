@@ -73,6 +73,94 @@ class Ipex extends \Ease\Sand
     }
 
     /**
+     * Check if order already exists for given customer and date range.
+     *
+     * @param string $customerExtId External customer ID
+     * @param \DateTime $startDate Start date of the period
+     * @param \DateTime $endDate End date of the period
+     *
+     * @return bool True if order exists, false otherwise
+     */
+    public function orderExistsForPeriod(string $customerExtId, \DateTime $startDate, \DateTime $endDate): bool
+    {
+        $orderer = $this->getOrderer();
+        $orderer->defaultUrlParams['order'] = 'datVyst@A';
+        $orderer->defaultUrlParams['limit'] = 0;
+
+        $conds = [
+            'storno' => false,
+            'firma' => $customerExtId,
+            'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP'),
+            // Check for orders that overlap with the period
+            'datVyst' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
+        ];
+
+        $existingOrders = $orderer->getColumnsFromAbraFlexi(
+            ['kod', 'datVyst', 'popis'],
+            $conds,
+            'id'
+        );
+
+        if ($orderer->lastResponseCode === 200 && !empty($existingOrders)) {
+            // Check if any existing order covers the same period by examining the description
+            foreach ($existingOrders as $order) {
+                $popis = $order['popis'] ?? '';
+                // Check if description contains dates that match our target period
+                if (strpos($popis, self::formatDate($startDate)) !== false && 
+                    strpos($popis, self::formatDate($endDate)) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if invoice already exists for given customer and period.
+     *
+     * @param string $customerExtId External customer ID
+     * @param \DateTime $startDate Start date of the period
+     * @param \DateTime $endDate End date of the period
+     *
+     * @return bool True if invoice exists, false otherwise
+     */
+    public function invoiceExistsForPeriod(string $customerExtId, \DateTime $startDate, \DateTime $endDate): bool
+    {
+        $invoicer = $this->getInvoicer();
+        $invoicer->defaultUrlParams['order'] = 'datVyst@A';
+        $invoicer->defaultUrlParams['limit'] = 0;
+
+        $conds = [
+            'storno' => false,
+            'firma' => $customerExtId,
+            'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\Code::ensure('FAKTURA')),
+            // Check for invoices in the target month
+            'datVyst' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
+        ];
+
+        $existingInvoices = $invoicer->getColumnsFromAbraFlexi(
+            ['kod', 'datVyst', 'popis'],
+            $conds,
+            'id'
+        );
+
+        if ($invoicer->lastResponseCode === 200 && !empty($existingInvoices)) {
+            // Check if any existing invoice covers the same period by examining the description
+            foreach ($existingInvoices as $invoice) {
+                $popis = $invoice['popis'] ?? '';
+                // Check if description contains dates that match our target period
+                if (strpos($popis, self::formatDate($startDate)) !== false && 
+                    strpos($popis, self::formatDate($endDate)) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get IPEX invoices data for last month.
      *
      * @param mixed $periodOptions
@@ -92,15 +180,37 @@ class Ipex extends \Ease\Sand
 
         $monthOffset = $periodOptions['monthOffset'] ?? -1;
 
+        // Set target month boundaries for filtering
         $this->since = new \DateTime('first day of this month');
         $this->since->modify((string) $monthOffset.' month');
         $this->until = clone $this->since;
         $this->until->modify('last day of this month');
+        
+        // IPEX API provides records from monthOffset to now, so we need to filter
         $grabber->setUrlParams(['monthOffset' => $monthOffset]);
 
         $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 50);
 
-        return $grabber->requestData('postpaid');
+        $rawInvoices = $grabber->requestData('postpaid');
+        
+        // Since IPEX API returns records from monthOffset to now,
+        // we need to filter to only include the target month
+        if (is_array($rawInvoices)) {
+            $filteredInvoices = [];
+            foreach ($rawInvoices as $invoice) {
+                $invoiceStart = new \DateTime($invoice['dateStart']);
+                $invoiceEnd = new \DateTime($invoice['dateEnd']);
+                
+                // Only include invoices that fall within our target month
+                // (not just overlap, but actually belong to that month)
+                if ($invoiceStart >= $this->since && $invoiceStart <= $this->until) {
+                    $filteredInvoices[] = $invoice;
+                }
+            }
+            return $filteredInvoices;
+        }
+        
+        return $rawInvoices;
     }
 
     /**
@@ -120,26 +230,112 @@ class Ipex extends \Ease\Sand
      *
      * @param array<int, array<string, string>> $invoicesRaw Array of raw invoice data
      *
-     * @return array<string, array<string, string>> Array indexed by externId with order info
+     * @return array<string, array<string, mixed>> Array indexed by externId with detailed order info
      */
     public function processIpexPostpaidOrders(array $invoicesRaw): array
     {
         $position = 0;
-        $result = []; // Initialize result as an empty array
+        $result = [];
+        $summary = [
+            'processedCount' => 0,
+            'createdCount' => 0,
+            'skippedCount' => 0,
+            'duplicateCount' => 0,
+            'totalAmount' => 0.0,
+            'processedPeriod' => [
+                'from' => isset($this->since) ? $this->since->format('Y-m-d') : null,
+                'to' => isset($this->until) ? $this->until->format('Y-m-d') : null
+            ],
+            'processedAt' => (new \DateTime())->format('Y-m-d H:i:s')
+        ];
+        $createdOrders = [];
+        $skippedOrders = [];
+        $duplicateOrders = [];
 
         foreach ($invoicesRaw as $invoiceRaw) {
-            $result[(string) $invoiceRaw['externId']] = [];
+            $summary['processedCount']++;
+            $customerExtId = (string) $invoiceRaw['externId'];
+            $customerName = $invoiceRaw['customerName'] ?? $customerExtId;
+            $price = (float) ($invoiceRaw['price'] ?? 0);
+            
+            $result[$customerExtId] = [
+                'customerName' => $customerName,
+                'ipexCustomerId' => $invoiceRaw['customerId'] ?? null,
+                'price' => $price,
+                'dateStart' => $invoiceRaw['dateStart'] ?? null,
+                'dateEnd' => $invoiceRaw['dateEnd'] ?? null,
+                'status' => 'processing'
+            ];
+            
             $this->counter = '#'.++$position.'/'.\count($invoicesRaw).' ';
+
+            // Check for duplicates first
+            $startDate = new \DateTime($invoiceRaw['dateStart']);
+            $endDate = new \DateTime($invoiceRaw['dateEnd']);
+            
+            if ($this->orderExistsForPeriod($customerExtId, $startDate, $endDate)) {
+                $summary['duplicateCount']++;
+                $result[$customerExtId]['status'] = 'duplicate';
+                $result[$customerExtId]['order'] = 'Already exists';
+                $result[$customerExtId]['message'] = 'Order already exists for this period';
+                
+                $duplicateOrders[] = [
+                    'customerExtId' => $customerExtId,
+                    'customerName' => $customerName,
+                    'price' => $price,
+                    'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
+                    'reason' => 'Duplicate order for period'
+                ];
+                continue;
+            }
 
             $order = $this->createOrder($invoiceRaw);
 
             if ($order->getRecordId()) {
-                $result[(string) $invoiceRaw['externId']]['order'] = $order->getRecordCode();
-                $result[(string) $invoiceRaw['externId']]['amount'] = $order->getDataValue('sumZklZakl');
+                $summary['createdCount']++;
+                $orderCode = $order->getRecordCode();
+                $orderAmount = (float) $order->getDataValue('sumZklZakl');
+                $summary['totalAmount'] += $orderAmount;
+                
+                $result[$customerExtId]['status'] = 'created';
+                $result[$customerExtId]['order'] = $orderCode;
+                $result[$customerExtId]['amount'] = $orderAmount;
+                $result[$customerExtId]['orderUrl'] = $order->getApiUrl();
+                $result[$customerExtId]['createdAt'] = (new \DateTime())->format('Y-m-d H:i:s');
+                
+                $createdOrders[] = [
+                    'orderCode' => $orderCode,
+                    'customerExtId' => $customerExtId,
+                    'customerName' => $customerName,
+                    'amount' => $orderAmount,
+                    'price' => $price,
+                    'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
+                    'orderUrl' => $order->getApiUrl(),
+                    'createdAt' => (new \DateTime())->format('Y-m-d H:i:s')
+                ];
             } else {
-                $result[(string) $invoiceRaw['externId']]['order'] = _('No Calls');
+                $summary['skippedCount']++;
+                $result[$customerExtId]['status'] = 'skipped';
+                $result[$customerExtId]['order'] = _('No Calls');
+                $result[$customerExtId]['message'] = 'No calls or zero amount';
+                
+                $skippedOrders[] = [
+                    'customerExtId' => $customerExtId,
+                    'customerName' => $customerName,
+                    'price' => $price,
+                    'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
+                    'reason' => $price == 0 ? 'Zero amount' : 'No calls'
+                ];
             }
         }
+
+        // Add audit summary to result
+        $result['_audit'] = [
+            'summary' => $summary,
+            'createdOrders' => $createdOrders,
+            'skippedOrders' => $skippedOrders,
+            'duplicateOrders' => $duplicateOrders
+        ];
 
         return $result;
     }
@@ -147,16 +343,39 @@ class Ipex extends \Ease\Sand
     /**
      * Process AbraFlexi Orders to AbraFlexi Invoices.
      *
-     * @return array<string, array> Description
+     * @return array<string, array> Enhanced result with detailed audit information
      */
     public function processIpexPostpaidInvoices(): array
     {
         $this->ipexUsers = $this->getIpexCustomersByExtCode();
-
         $allUsersCalls = $this->getUnivoicedCalls();
-
         $callsByCustomer = [];
         $result = [];
+        
+        // Enhanced audit tracking
+        $summary = [
+            'processedCount' => 0,
+            'createdCount' => 0,
+            'skippedCount' => 0,
+            'belowLimitCount' => 0,
+            'skipListCount' => 0,
+            'duplicateCount' => 0,
+            'noCustomerCount' => 0,
+            'totalInvoicedAmount' => 0.0,
+            'totalBelowLimitAmount' => 0.0,
+            'invoicingLimit' => $this->invoicingLimit,
+            'processedPeriod' => [
+                'from' => isset($this->since) ? $this->since->format('Y-m-d') : null,
+                'to' => isset($this->until) ? $this->until->format('Y-m-d') : null
+            ],
+            'processedAt' => (new \DateTime())->format('Y-m-d H:i:s')
+        ];
+        
+        $createdInvoices = [];
+        $skippedInvoices = [];
+        $belowLimitInvoices = [];
+        $duplicateInvoices = [];
+        $noCustomerOrders = [];
 
         if ($this->uninvoicedAmount($allUsersCalls)) {
             foreach ($allUsersCalls as $call) {
@@ -164,33 +383,164 @@ class Ipex extends \Ease\Sand
             }
 
             foreach ($callsByCustomer as $customer => $calls) {
+                $summary['processedCount']++;
+                $customerCode = \AbraFlexi\Functions::uncode($customer);
+                $uninvoicedAmount = $this->uninvoicedAmount($calls);
+                $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode ?? $customer;
+                
+                $result[$customer] = [
+                    'customerCode' => $customerCode,
+                    'customerName' => $customerName,
+                    'orderCount' => count($calls),
+                    'uninvoicedAmount' => $uninvoicedAmount,
+                    'status' => 'processing'
+                ];
+
                 if (\array_key_exists($customer, $this->ipexUsers)) {
-                    $customerCode = \AbraFlexi\Functions::uncode($customer);
-
                     if ($customerCode) {
-                        $uninvoicedAmount = $this->uninvoicedAmount($calls);
-
-                        if (empty(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST')) || (strstr(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST', ''), $customerCode) === false)) {
-                            if ($uninvoicedAmount > $this->invoicingLimit) {
-                                $result[$customer]['invoice'] = $this->createInvoice($calls)->getRecordCode();
+                        // Check if customer is in skip list
+                        if (!empty(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST')) && 
+                            (strstr(\Ease\Shared::cfg('ABRAFLEXI_SKIPLIST', ''), $customerCode) !== false)) {
+                            
+                            $summary['skipListCount']++;
+                            $result[$customer]['status'] = 'skipped_skiplist';
+                            $result[$customer]['invoice'] = 'in ABRAFLEXI_SKIPLIST';
+                            $result[$customer]['reason'] = 'Customer in skip list';
+                            
+                            $skippedInvoices[] = [
+                                'customerCode' => $customerCode,
+                                'customerName' => $customerName,
+                                'amount' => $uninvoicedAmount,
+                                'orderCount' => count($calls),
+                                'reason' => 'Customer in ABRAFLEXI_SKIPLIST'
+                            ];
+                            continue;
+                        }
+                        
+                        // Check if amount meets threshold
+                        if ($uninvoicedAmount > $this->invoicingLimit) {
+                            // Check for duplicate invoice first
+                            if (isset($this->since) && isset($this->until) && 
+                                $this->invoiceExistsForPeriod($customer, $this->since, $this->until)) {
+                                
+                                $summary['duplicateCount']++;
+                                $result[$customer]['status'] = 'duplicate';
+                                $result[$customer]['invoice'] = 'Already exists';
+                                $result[$customer]['reason'] = 'Invoice already exists for this period';
+                                
+                                $duplicateInvoices[] = [
+                                    'customerCode' => $customerCode,
+                                    'customerName' => $customerName,
+                                    'amount' => $uninvoicedAmount,
+                                    'orderCount' => count($calls),
+                                    'period' => isset($this->since) && isset($this->until) ? 
+                                        $this->since->format('Y-m-d') . ' to ' . $this->until->format('Y-m-d') : 'Unknown',
+                                    'reason' => 'Duplicate invoice for period'
+                                ];
                             } else {
-                                $result[$customer]['invoice'] = $uninvoicedAmount.' < '.$this->invoicingLimit;
+                                // Create invoice
+                                $invoice = $this->createInvoice($calls);
+                                $invoiceCode = $invoice->getRecordCode();
+                                
+                                if ($invoiceCode) {
+                                    $summary['createdCount']++;
+                                    $invoiceAmount = (float) $invoice->getDataValue('sumCelkem');
+                                    $summary['totalInvoicedAmount'] += $invoiceAmount;
+                                    
+                                    $result[$customer]['status'] = 'created';
+                                    $result[$customer]['invoice'] = $invoiceCode;
+                                    $result[$customer]['invoiceAmount'] = $invoiceAmount;
+                                    $result[$customer]['invoiceUrl'] = $invoice->getApiUrl();
+                                    $result[$customer]['createdAt'] = (new \DateTime())->format('Y-m-d H:i:s');
+                                    
+                                    $createdInvoices[] = [
+                                        'invoiceCode' => $invoiceCode,
+                                        'customerCode' => $customerCode,
+                                        'customerName' => $customerName,
+                                        'amount' => $invoiceAmount,
+                                        'orderCount' => count($calls),
+                                        'orderCodes' => array_keys($calls),
+                                        'period' => isset($this->since) && isset($this->until) ? 
+                                            $this->since->format('Y-m-d') . ' to ' . $this->until->format('Y-m-d') : 'Unknown',
+                                        'invoiceUrl' => $invoice->getApiUrl(),
+                                        'createdAt' => (new \DateTime())->format('Y-m-d H:i:s')
+                                    ];
+                                } else {
+                                    $summary['skippedCount']++;
+                                    $result[$customer]['status'] = 'failed';
+                                    $result[$customer]['invoice'] = 'Creation failed';
+                                    $result[$customer]['reason'] = 'Invoice creation failed';
+                                }
                             }
                         } else {
-                            $result[$customer]['invoice'] = 'in ABRAFLEXI_SKIPLIST';
+                            $summary['belowLimitCount']++;
+                            $summary['totalBelowLimitAmount'] += $uninvoicedAmount;
+                            
+                            $result[$customer]['status'] = 'below_limit';
+                            $result[$customer]['invoice'] = $uninvoicedAmount.' < '.$this->invoicingLimit;
+                            $result[$customer]['reason'] = 'Amount below invoicing limit';
+                            
+                            $belowLimitInvoices[] = [
+                                'customerCode' => $customerCode,
+                                'customerName' => $customerName,
+                                'amount' => $uninvoicedAmount,
+                                'limit' => $this->invoicingLimit,
+                                'orderCount' => count($calls),
+                                'orderCodes' => array_keys($calls)
+                            ];
                         }
                     } else {
+                        $summary['noCustomerCount']++;
                         $this->addStatusMessage(_('Unknown AbraFlexi customer. No invoice created.'), 'warning');
+                        
+                        $result[$customer]['status'] = 'no_customer';
+                        $result[$customer]['invoice'] = 'Unknown customer';
+                        $result[$customer]['reason'] = 'Customer code could not be resolved';
 
                         foreach ($calls as $call) {
-                            $result['nocustomer'][] = $call['kod'];
+                            $noCustomerOrders[] = [
+                                'orderCode' => $call['kod'],
+                                'customer' => $customer,
+                                'amount' => (float) $call['sumCelkem'],
+                                'reason' => 'Unknown AbraFlexi customer'
+                            ];
                         }
                     }
                 } else {
+                    $summary['noCustomerCount']++;
                     $this->addStatusMessage(sprintf(_('Ipex Customer Without externalId: %s'), $customer), 'warning');
+                    
+                    $result[$customer]['status'] = 'not_ipex_customer';
                     $result[$customer]['invoice'] = sprintf(_('Not an Ipex customer: %s ?'), $customer);
+                    $result[$customer]['reason'] = 'Customer not found in IPEX customer list';
+                    
+                    foreach ($calls as $call) {
+                        $noCustomerOrders[] = [
+                            'orderCode' => $call['kod'],
+                            'customer' => $customer,
+                            'amount' => (float) $call['sumCelkem'],
+                            'reason' => 'Not an IPEX customer'
+                        ];
+                    }
                 }
             }
+        } else {
+            $summary['processedCount'] = 0;
+        }
+        
+        // Add enhanced audit summary to result
+        $result['_audit'] = [
+            'summary' => $summary,
+            'createdInvoices' => $createdInvoices,
+            'skippedInvoices' => $skippedInvoices,
+            'belowLimitInvoices' => $belowLimitInvoices,
+            'duplicateInvoices' => $duplicateInvoices,
+            'noCustomerOrders' => $noCustomerOrders
+        ];
+        
+        // Maintain backward compatibility
+        if (!empty($noCustomerOrders)) {
+            $result['nocustomer'] = array_column($noCustomerOrders, 'orderCode');
         }
 
         return $result;
@@ -238,6 +588,11 @@ class Ipex extends \Ease\Sand
 
         if ($klientExtID) {
             $conds['firma'] = $klientExtID;
+        }
+        
+        // If we have a target period defined (since/until), filter by date range
+        if (isset($this->since) && isset($this->until)) {
+            $conds['datVyst'] = [$this->since->format('Y-m-d'), $this->until->format('Y-m-d')];
         }
 
         $orders = $this->getOrderer()->getColumnsFromAbraFlexi(
@@ -306,13 +661,23 @@ class Ipex extends \Ease\Sand
         $adresar = new \AbraFlexi\Adresar();
         $startDate = new \DateTime($invoiceRaw['dateStart']);
         $endDate = new \DateTime($invoiceRaw['dateEnd']);
+        
+        // Check if order already exists for this customer and period
+        if ($this->orderExistsForPeriod($invoiceRaw['externId'], $startDate, $endDate)) {
+            $this->addStatusMessage(
+                $this->counter.$invoiceRaw['customerName'].' - Order already exists for period '.self::formatDate($startDate).' - '.self::formatDate($endDate),
+                'info'
+            );
+            // Return empty order object
+            return $this->getOrderer();
+        }
 
         $order = $this->getOrderer([
             'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP'),
             'stavUzivK' => 'stavDoklObch.pripraveno',
             'zaokrNaSumK' => 'zaokrNa.zadne',
             'zaokrNaDphK' => 'zaokrNa.zadne',
-            //            'datVyst' =>
+            'datVyst' => $this->since->format('Y-m-d'), // Set order date to beginning of target month
             'popis' => _('IPEX Postpaid'),
         ]);
 
@@ -378,7 +743,7 @@ class Ipex extends \Ease\Sand
      *
      * @param int    $ipexCustomerID internal IPEX id
      * @param string $customerName   to use in filename
-     * @param int    $offset         months back to include in list
+     * @param int    $offset         months back to include in list (deprecated, uses $this->since/$this->until if available)
      *
      * @return string binary PDF
      */
@@ -386,10 +751,16 @@ class Ipex extends \Ease\Sand
     {
         $caller = new \IPEXB2B\Calls();
 
-        $startDate = new \DateTime('first day of this month');
-        $startDate->modify(' -'.$offset.' month');
-        $endDate = clone $startDate;
-        $endDate->modify('last day of this month'); // opraveno
+        // Use the target period if available, otherwise fall back to offset calculation
+        if (isset($this->since) && isset($this->until)) {
+            $startDate = clone $this->since;
+            $endDate = clone $this->until;
+        } else {
+            $startDate = new \DateTime('first day of this month');
+            $startDate->modify(' -'.$offset.' month');
+            $endDate = clone $startDate;
+            $endDate->modify('last day of this month');
+        }
 
         $calls = $caller->getCallsForCustomer($startDate, $ipexCustomerID);
 
@@ -424,21 +795,27 @@ class Ipex extends \Ease\Sand
      *
      * @param int    $ipexCustomerID
      * @param string $customerName
-     * @param int    $offset         months
+     * @param int    $offset         months (deprecated, uses $this->since/$this->until if available)
      *
      * @return string saved callLog filename
      */
     public function savePdfCallLog($ipexCustomerID, $customerName, $offset = 1)
     {
-        $startDate = new \DateTime();
-        $startDate->modify(' -'.$offset.' month');
-        $now = new \DateTime();
+        // Use the target period if available, otherwise fall back to offset calculation
+        if (isset($this->since) && isset($this->until)) {
+            $startDate = clone $this->since;
+            $endDate = clone $this->until;
+        } else {
+            $startDate = new \DateTime();
+            $startDate->modify(' -'.$offset.' month');
+            $endDate = new \DateTime();
+        }
 
         $pdfFilename = sys_get_temp_dir().'/'.urlencode(str_replace(
             ' ',
             '_',
             \Ease\Functions::rip($customerName),
-        )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
+        )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$endDate->format('Y-m-d').'.pdf';
 
         return file_put_contents(
             $pdfFilename,
@@ -456,8 +833,9 @@ class Ipex extends \Ease\Sand
     {
         $caller = new \IPEXB2B\Calls();
 
+        // Use the target period for call retrieval
         $calls = $caller->getCallsForCustomer(
-            $this->since,
+            isset($this->since) ? $this->since : new \DateTime('first day of last month'),
             $customerId,
         );
 
@@ -529,11 +907,24 @@ class Ipex extends \Ease\Sand
      */
     public function createInvoice(array $callsOrders): FakturaVydana
     {
+        $firstOrder = current($callsOrders);
+        $customerExtId = (string) $firstOrder['firma'];
+        
+        // Check if invoice already exists for this customer and period
+        if ($this->invoiceExistsForPeriod($customerExtId, $this->since, $this->until)) {
+            $this->addStatusMessage(
+                $this->counter.$customerExtId.' - Invoice already exists for period '.self::formatDate($this->since).' - '.self::formatDate($this->until),
+                'info'
+            );
+            // Return empty invoice object
+            return new FakturaVydana();
+        }
+        
         $invoice = new FakturaVydana();
         $invoice->setDataValue('typDokl', \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\Code::ensure('FAKTURA')));
 
         $invoice->setDataValue('stavMailK', strtolower(\Ease\Shared::cfg('ABRAFLEXI_SEND', 'false')) === 'true' ? 'stavMail.odeslat' : 'stavMail.neodesilat');
-        $invoice->setDataValue('firma', \AbraFlexi\Code::ensure((string) current($callsOrders)['firma']));
+        $invoice->setDataValue('firma', \AbraFlexi\Code::ensure($customerExtId));
         $invoice->setDataValue('typUcOp', \AbraFlexi\Code::ensure('TRŽBA SLUŽBY INT'));
 
         foreach ($callsOrders as $orderCode => $orderData) {
@@ -639,5 +1030,168 @@ class Ipex extends \Ease\Sand
         }
 
         return $this->order;
+    }
+    
+    /**
+     * Display audit summary for orders or invoices.
+     *
+     * @param array $report The report array with _audit section
+     * @param string $type Type of report ('orders' or 'invoices')
+     */
+    public function displayAuditSummary(array $report, string $type = 'orders'): void
+    {
+        if (!isset($report['_audit'])) {
+            $this->addStatusMessage('No audit information found in report', 'warning');
+            return;
+        }
+        
+        $audit = $report['_audit'];
+        $summary = $audit['summary'];
+        
+        $this->addStatusMessage("=== AUDIT SUMMARY FOR " . strtoupper($type) . " ===", 'info');
+        $this->addStatusMessage(sprintf('Processed: %d items', $summary['processedCount']), 'info');
+        
+        if ($type === 'orders') {
+            $this->addStatusMessage(sprintf('Created: %d orders (%.2f CZK)', 
+                $summary['createdCount'], $summary['totalAmount']), 'success');
+            $this->addStatusMessage(sprintf('Skipped: %d orders', $summary['skippedCount']), 'info');
+            $this->addStatusMessage(sprintf('Duplicates: %d orders', $summary['duplicateCount']), 'warning');
+            
+            if (!empty($audit['createdOrders'])) {
+                $this->addStatusMessage('--- CREATED ORDERS ---', 'info');
+                foreach ($audit['createdOrders'] as $order) {
+                    $this->addStatusMessage(sprintf('%s: %s (%.2f CZK) - Period: %s', 
+                        $order['orderCode'], $order['customerName'], $order['amount'], $order['period']), 'success');
+                }
+            }
+        } else {
+            $this->addStatusMessage(sprintf('Created: %d invoices (%.2f CZK)', 
+                $summary['createdCount'], $summary['totalInvoicedAmount']), 'success');
+            $this->addStatusMessage(sprintf('Below limit: %d (%.2f CZK < %.2f)', 
+                $summary['belowLimitCount'], $summary['totalBelowLimitAmount'], $summary['invoicingLimit']), 'info');
+            $this->addStatusMessage(sprintf('Skip list: %d customers', $summary['skipListCount']), 'info');
+            $this->addStatusMessage(sprintf('Duplicates: %d invoices', $summary['duplicateCount']), 'warning');
+            $this->addStatusMessage(sprintf('No customer: %d orders', $summary['noCustomerCount']), 'warning');
+            
+            if (!empty($audit['createdInvoices'])) {
+                $this->addStatusMessage('--- CREATED INVOICES ---', 'info');
+                foreach ($audit['createdInvoices'] as $invoice) {
+                    $this->addStatusMessage(sprintf('%s: %s (%.2f CZK) - %d orders - Period: %s', 
+                        $invoice['invoiceCode'], $invoice['customerName'], $invoice['amount'], 
+                        $invoice['orderCount'], $invoice['period']), 'success');
+                }
+            }
+        }
+        
+        if (isset($summary['processedPeriod']) && $summary['processedPeriod']['from']) {
+            $this->addStatusMessage(sprintf('Period: %s to %s', 
+                $summary['processedPeriod']['from'], $summary['processedPeriod']['to']), 'info');
+        }
+        
+        $this->addStatusMessage(sprintf('Processed at: %s', $summary['processedAt']), 'info');
+        $this->addStatusMessage("=== END AUDIT SUMMARY ===", 'info');
+    }
+    
+    /**
+     * Generate MultiFlexi-compliant report from audit data.
+     *
+     * @param array $report The detailed audit report
+     * @param string $type Type of operation ('orders' or 'invoices')
+     * @param int $exitCode Exit code from the operation
+     *
+     * @return array MultiFlexi-compliant report structure
+     */
+    public function generateMultiFlexiReport(array $report, string $type = 'orders', int $exitCode = 0): array
+    {
+        if (!isset($report['_audit'])) {
+            return [
+                'status' => 'error',
+                'timestamp' => (new \DateTime())->format('c'),
+                'message' => 'No audit data available in report',
+                'metrics' => [
+                    'exit_code' => $exitCode
+                ]
+            ];
+        }
+        
+        $audit = $report['_audit'];
+        $summary = $audit['summary'];
+        
+        // Determine overall status
+        $status = 'success';
+        if ($exitCode !== 0) {
+            $status = 'error';
+        } elseif (($summary['duplicateCount'] ?? 0) > 0 || ($summary['skippedCount'] ?? 0) > 0) {
+            $status = 'warning';
+        }
+        
+        // Generate human-readable message
+        if ($type === 'orders') {
+            $message = sprintf(
+                'Processed %d IPEX invoices for period %s to %s. Created %d orders (%.2f CZK), skipped %d, found %d duplicates.',
+                $summary['processedCount'],
+                $summary['processedPeriod']['from'] ?? 'unknown',
+                $summary['processedPeriod']['to'] ?? 'unknown',
+                $summary['createdCount'],
+                $summary['totalAmount'] ?? 0,
+                $summary['skippedCount'] ?? 0,
+                $summary['duplicateCount'] ?? 0
+            );
+        } else {
+            $message = sprintf(
+                'Processed %d customers for invoicing. Created %d invoices (%.2f CZK), %d below limit (%.2f CZK), %d skipped, %d duplicates.',
+                $summary['processedCount'],
+                $summary['createdCount'],
+                $summary['totalInvoicedAmount'] ?? 0,
+                $summary['belowLimitCount'] ?? 0,
+                $summary['totalBelowLimitAmount'] ?? 0,
+                $summary['skipListCount'] ?? 0,
+                $summary['duplicateCount'] ?? 0
+            );
+        }
+        
+        // Prepare artifacts - URLs of created documents
+        $artifacts = [];
+        if ($type === 'orders' && !empty($audit['createdOrders'])) {
+            $artifacts['orders'] = array_column($audit['createdOrders'], 'orderUrl');
+            $artifacts['orders'] = array_filter($artifacts['orders']); // Remove empty URLs
+        } elseif ($type === 'invoices' && !empty($audit['createdInvoices'])) {
+            $artifacts['invoices'] = array_column($audit['createdInvoices'], 'invoiceUrl');
+            $artifacts['invoices'] = array_filter($artifacts['invoices']); // Remove empty URLs
+        }
+        
+        // Prepare metrics
+        $metrics = [
+            'exit_code' => $exitCode,
+            'processed_count' => $summary['processedCount'],
+            'created_count' => $summary['createdCount'],
+            'skipped_count' => $summary['skippedCount'] ?? 0,
+            'duplicate_count' => $summary['duplicateCount'] ?? 0
+        ];
+        
+        if ($type === 'orders') {
+            $metrics['total_amount'] = $summary['totalAmount'] ?? 0;
+        } else {
+            $metrics['total_invoiced_amount'] = $summary['totalInvoicedAmount'] ?? 0;
+            $metrics['total_below_limit_amount'] = $summary['totalBelowLimitAmount'] ?? 0;
+            $metrics['below_limit_count'] = $summary['belowLimitCount'] ?? 0;
+            $metrics['skip_list_count'] = $summary['skipListCount'] ?? 0;
+            $metrics['no_customer_count'] = $summary['noCustomerCount'] ?? 0;
+            $metrics['invoicing_limit'] = $summary['invoicingLimit'] ?? 0;
+        }
+        
+        // Add period information if available
+        if (isset($summary['processedPeriod'])) {
+            $metrics['period_from'] = $summary['processedPeriod']['from'];
+            $metrics['period_to'] = $summary['processedPeriod']['to'];
+        }
+        
+        return [
+            'status' => $status,
+            'timestamp' => (new \DateTime())->format('c'),
+            'message' => $message,
+            'artifacts' => $artifacts,
+            'metrics' => $metrics
+        ];
     }
 }
