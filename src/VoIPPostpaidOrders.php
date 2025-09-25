@@ -43,7 +43,7 @@ if (Shared::cfg('APP_DEBUG', false)) {
 
 // Set monthOffset from command line options, environment variable, or default to -1
 $monthOffset = isset($options['monthOffset']) ? (int) $options['monthOffset'] :
-               (isset($options['m']) ? (int) $options['m'] : 
+               (isset($options['m']) ? (int) $options['m'] :
                (int) Shared::cfg('MONTH_OFFSET', -1));
 $dateFrom = $options['dateFrom'] ?? ($options['f'] ?? null);
 $dateTo = $options['dateTo'] ?? ($options['t'] ?? null);
@@ -100,9 +100,9 @@ if ($useMultiFlexiFormat) {
         $report['period'] = [
             'from' => $summary['processedPeriod']['from'] ?? null,
             'to' => $summary['processedPeriod']['to'] ?? null,
-            'range' => isset($summary['processedPeriod']['from'], $summary['processedPeriod']['to']) 
-                ? $summary['processedPeriod']['from'] . ' - ' . $summary['processedPeriod']['to'] 
-                : null
+            'range' => isset($summary['processedPeriod']['from'], $summary['processedPeriod']['to'])
+                ? $summary['processedPeriod']['from'].' - '.$summary['processedPeriod']['to']
+                : null,
         ];
         $report['totalAmount'] = $summary['totalAmount'] ?? 0.0;
         $report['processedCount'] = $summary['processedCount'] ?? 0;
@@ -111,7 +111,7 @@ if ($useMultiFlexiFormat) {
         $report['duplicateCount'] = $summary['duplicateCount'] ?? 0;
         $report['processedAt'] = $summary['processedAt'] ?? null;
     }
-    
+
     // Generate standard detailed audit report
     $written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
     $ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');

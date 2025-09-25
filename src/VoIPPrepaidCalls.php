@@ -67,15 +67,16 @@ foreach ($invoicesRaw as $invoiceRaw) {
         $calls = $caller->getCallsForCustomer($startDate, (int) $invoiceRaw['customerId']);
 
         $range = $startDate->format('m/d/Y').' - '.$now->format('m/d/Y');
-        
+
         // Calculate total amount from calls
         $totalAmount = 0;
+
         foreach ($calls as $call) {
             if (isset($call['price'])) {
                 $totalAmount += (float) $call['price'];
             }
         }
-        
+
         $report = new \Ease\Container(new \Ease\Html\H2Tag('Calls listing'));
         $report->addItem(new \Ease\Html\PTag($range));
         $report->addItem(new CallsListing(
@@ -112,7 +113,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = $postman->send();
         $jsonReportData[$adresar->getRecordCode()]['period'] = $range;
         $jsonReportData[$adresar->getRecordCode()]['totalAmount'] = $totalAmount;
-        $jsonReportData[$adresar->getRecordCode()]['callsCount'] = count($calls);
+        $jsonReportData[$adresar->getRecordCode()]['callsCount'] = \count($calls);
     } else {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = false;
         $jsonReportData[$adresar->getRecordCode()]['period'] = null;
