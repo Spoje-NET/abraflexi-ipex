@@ -42,7 +42,9 @@ if (Shared::cfg('APP_DEBUG', false)) {
     $grabber->logBanner();
 }
 
-$grabber->setUrlParams(['monthOffset' => -1]);
+// Get monthOffset from environment variable or default to -1
+$monthOffset = (int) Shared::cfg('MONTH_OFFSET', -1);
+$grabber->setUrlParams(['monthOffset' => $monthOffset]);
 $invoicesRaw = $grabber->requestData('prepaid');
 $adresar = new \AbraFlexi\Adresar();
 $jsonReportData = [];
@@ -65,6 +67,15 @@ foreach ($invoicesRaw as $invoiceRaw) {
         $calls = $caller->getCallsForCustomer($startDate, (int) $invoiceRaw['customerId']);
 
         $range = $startDate->format('m/d/Y').' - '.$now->format('m/d/Y');
+        
+        // Calculate total amount from calls
+        $totalAmount = 0;
+        foreach ($calls as $call) {
+            if (isset($call['price'])) {
+                $totalAmount += (float) $call['price'];
+            }
+        }
+        
         $report = new \Ease\Container(new \Ease\Html\H2Tag('Calls listing'));
         $report->addItem(new \Ease\Html\PTag($range));
         $report->addItem(new CallsListing(
@@ -99,8 +110,14 @@ foreach ($invoicesRaw as $invoiceRaw) {
         unlink($pdfFilename);
 
         $jsonReportData[$adresar->getRecordCode()]['mail'] = $postman->send();
+        $jsonReportData[$adresar->getRecordCode()]['period'] = $range;
+        $jsonReportData[$adresar->getRecordCode()]['totalAmount'] = $totalAmount;
+        $jsonReportData[$adresar->getRecordCode()]['callsCount'] = count($calls);
     } else {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = false;
+        $jsonReportData[$adresar->getRecordCode()]['period'] = null;
+        $jsonReportData[$adresar->getRecordCode()]['totalAmount'] = null;
+        $jsonReportData[$adresar->getRecordCode()]['callsCount'] = 0;
         $grabber->addStatusMessage(
             $invoiceRaw['customerName'].' without extID',
             'warning',

@@ -100,6 +100,18 @@
             "description": "Ipex password",
             "defval": "",
             "required": true
+        },
+        "RESULT_FILE": {
+            "type": "string",
+            "description": "Path to the result file for generated reports",
+            "defval": "/tmp/abraflexi-ipex-prepaid-result.json",
+            "required": false
+        },
+        "MONTH_OFFSET": {
+            "type": "int",
+            "description": "Month offset for processing (negative values for past months, e.g. -1 for last month)",
+            "defval": -1,
+            "required": false
         }
     },
     "multiflexi": "1.10.2.0"
