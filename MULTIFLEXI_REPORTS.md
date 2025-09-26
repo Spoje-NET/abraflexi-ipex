@@ -9,11 +9,7 @@ https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-cor
 
 ## Activation
 
-MultiFlexi-compliant reports are generated automatically when:
-
-1. **MULTIFLEXI_REPORT_FORMAT** environment variable is set to `true`
-2. **Output filename contains "multiflexi"** (e.g., `multiflexi_report.json`)
-3. **MULTIFLEXI environment variable** is present (set by MultiFlexi platform)
+MultiFlexi-compliant reports are generated automatically.
 
 ## Usage Examples
 
@@ -31,7 +27,6 @@ abraflexi-ipex-postpaid-orders -o orders_report.json
 
 ### Environment Configuration
 ```bash
-export MULTIFLEXI_REPORT_FORMAT=true
 export RESULT_FILE="multiflexi_ipex_orders.json"
 ```
 

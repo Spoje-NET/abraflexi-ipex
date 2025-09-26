@@ -29,12 +29,6 @@
             "defval": "multiflexi_ipex_orders_{ABRAFLEXI_COMPANY}.json",
             "required": false
         },
-        "MULTIFLEXI_REPORT_FORMAT": {
-            "type": "bool",
-            "description": "Generate MultiFlexi-compliant report format",
-            "defval": "True",
-            "required": false
-        },
         "EASE_LOGGER": {
             "type": "string",
             "description": "Logger type",
