@@ -720,7 +720,7 @@ class Ipex extends \Ease\Sand
             // Check what actions are enabled for call list processing
             $attachPdfToOrder = strtolower(\Ease\Shared::cfg('ATTACH_CALL_LIST_PDF', 'true')) === 'true';
             $sendByEmail = strtolower(\Ease\Shared::cfg('SEND_CALL_LIST_EMAIL', 'true')) === 'true';
-            
+
             // Generate PDF only if it will be used (attached to order OR sent by email)
             $shouldGeneratePdf = $attachPdfToOrder || $sendByEmail;
 
@@ -734,7 +734,7 @@ class Ipex extends \Ease\Sand
                 ).'.pdf';
 
                 file_put_contents($callLogFilename, $pdfCallLog);
-                
+
                 // Attach to order only if enabled
                 if ($attachPdfToOrder) {
                     \AbraFlexi\Priloha::addAttachmentFromFile($order, $callLogFilename);
