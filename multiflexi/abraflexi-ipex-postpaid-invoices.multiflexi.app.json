@@ -11,7 +11,10 @@
     "topics": ["AbraFlexi", "Ipex", "Invoice"],
     "uuid": "262dabf1-d7b1-42c8-91a1-fe991631547c",
     "produces": {
-        "invoices": "AbraFlexi invoices created from orders"
+        "invoices": {
+            "description": "AbraFlexi invoices created from orders",
+            "format": "json"
+        }
     },
     "environment": {
         "APP_DEBUG": {

@@ -45,7 +45,11 @@ When create new class or update existing class, always create or update its phpu
 
 All files in the multiflexi/*.app.json directory must conform to the schema available at: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json
 
+When modifying or creating multiflexi/*.app.json files, always validate them against the schema before making changes. Use tools to check JSON schema compliance.
+
 All produced reports must conform to the schema available at: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json
+
+When modifying JSON files or creating new multiflexi applications, always verify the JSON syntax and schema compliance as part of the development process.
 
 When writing code that interacts with the IPEX API, always refer to the official documentation at https://restapi.ipex.cz/swagger.json for guidance on endpoints, parameters, and best practices.
 
