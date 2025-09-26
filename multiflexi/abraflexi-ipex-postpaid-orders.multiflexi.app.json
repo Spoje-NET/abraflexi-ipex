@@ -127,6 +127,18 @@
             "description": "Month offset for processing (negative values for past months, e.g. -1 for last month)",
             "defval": -1,
             "required": false
+        },
+        "ATTACH_CALL_LIST_PDF": {
+            "type": "bool",
+            "description": "Enable attaching PDF call list to orders in AbraFlexi",
+            "defval": "True",
+            "required": false
+        },
+        "SEND_CALL_LIST_EMAIL": {
+            "type": "bool",
+            "description": "Enable sending call list PDF by email to customers",
+            "defval": "True",
+            "required": false
         }
     },
     "multiflexi": "1.20.0"

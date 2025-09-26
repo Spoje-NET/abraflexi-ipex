@@ -84,41 +84,57 @@ foreach ($invoicesRaw as $invoiceRaw) {
             ['style' => 'font-size: small'],
         ));
 
-        $mpdfTmpDir = sys_get_temp_dir().'/mpdf';
+        // Check if email sending is enabled - only generate PDF if it will be sent
+        $sendByEmail = strtolower(Shared::cfg('SEND_CALL_LIST_EMAIL', 'true')) === 'true';
 
-        if (!file_exists($mpdfTmpDir)) {
-            mkdir($mpdfTmpDir);
+        $mailSent = false;
+
+        if ($sendByEmail) {
+            $mpdfTmpDir = sys_get_temp_dir().'/mpdf';
+
+            if (!file_exists($mpdfTmpDir)) {
+                mkdir($mpdfTmpDir);
+            }
+
+            $html2pdf = new \Mpdf\Mpdf([
+                'default_font_size' => 8,
+                'default_font' => 'dejavusans',
+                'tempDir' => $mpdfTmpDir,
+            ]);
+            $html2pdf->setDefaultFont('Helvetica');
+            $html2pdf->writeHTML((string) $report);
+            $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
+
+            $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
+
+            if ($sendByEmail) {
+                $postman = new Mailer(
+                    $email,
+                    _('Prepaid Calls listing').' '.$range,
+                    _('Prepaid Calls for last month'),
+                );
+                $postman->addFile($pdfFilename, 'application/pdf');
+                $mailSent = $postman->send();
+            }
+
+            unlink($pdfFilename);
+        } else {
+            $grabber->addStatusMessage('PDF call list generation skipped (email sending disabled)', 'info');
         }
 
-        $html2pdf = new \Mpdf\Mpdf([
-            'default_font_size' => 8,
-            'default_font' => 'dejavusans',
-            'tempDir' => $mpdfTmpDir,
-        ]);
-        $html2pdf->setDefaultFont('Helvetica');
-        $html2pdf->writeHTML((string) $report);
-        $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
-
-        $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
-
-        $postman = new Mailer(
-            $email,
-            _('Prepaid Calls listing').' '.$range,
-            _('Prepaid Calls for last month'),
-        );
-        $postman->addFile($pdfFilename, 'application/pdf');
-
-        unlink($pdfFilename);
-
-        $jsonReportData[$adresar->getRecordCode()]['mail'] = $postman->send();
+        $jsonReportData[$adresar->getRecordCode()]['mail'] = $mailSent;
         $jsonReportData[$adresar->getRecordCode()]['period'] = $range;
         $jsonReportData[$adresar->getRecordCode()]['totalAmount'] = $totalAmount;
         $jsonReportData[$adresar->getRecordCode()]['callsCount'] = \count($calls);
+        $jsonReportData[$adresar->getRecordCode()]['pdfGenerated'] = $sendByEmail;
+        $jsonReportData[$adresar->getRecordCode()]['emailSent'] = $sendByEmail && $mailSent;
     } else {
         $jsonReportData[$adresar->getRecordCode()]['mail'] = false;
         $jsonReportData[$adresar->getRecordCode()]['period'] = null;
         $jsonReportData[$adresar->getRecordCode()]['totalAmount'] = null;
         $jsonReportData[$adresar->getRecordCode()]['callsCount'] = 0;
+        $jsonReportData[$adresar->getRecordCode()]['pdfGenerated'] = false;
+        $jsonReportData[$adresar->getRecordCode()]['emailSent'] = false;
         $grabber->addStatusMessage(
             $invoiceRaw['customerName'].' without extID',
             'warning',

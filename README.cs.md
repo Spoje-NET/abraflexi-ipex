@@ -1,6 +1,28 @@
 # abraflexi-ipex (Česky)
 
-Tento dokument popisuje českou dokumentaci k integraci IPEX ↔ AbraFlexi se zaměřením na logiku minimální fakturace.
+Tento dokument popisuje českou### Tok zpracování
+
+1. Z IPEX API se vytvoří měsíční (postpaid) objednávky.
+2. Najdou se připravené objednávky s daným produktem.
+3. Seskupí se podle zákazníka a sečte se `sumCelkem`.
+4. Pokud součet > limit → vytvoří se faktura, připojí výpis hovorů, objednávky se označí jako hotové.
+5. Jinak objednávky zůstavají připravené pro pozdější navýšení.
+
+## Řízení PDF seznamů hovorů
+
+Při vytváření objednávek a zpracování prepaid hovorů se automaticky generují PDF seznamy hovorů, které se:
+
+- **Připojují k objednávkám** v AbraFlexi jako přílohy
+- **Odesílají emailem** zákazníkům na jejich kontaktní adresu
+
+Toto chování lze řídit pomocí proměnných prostředí:
+
+- `ATTACH_CALL_LIST_PDF=false` – zakáže připojování PDF k objednávkám/fakturám
+- `SEND_CALL_LIST_EMAIL=false` – zakáže odesílání emailů zákazníkům
+
+**Optimalizace:** PDF se generuje pouze pokud bude použito. Pokud jsou obě možnosti zakázané, PDF se vůbec negeneruje, což šetří čas a systémové prostředky.
+
+Výchozí hodnoty jsou `true` pro zachování kompatibility se stávajícím chováním.ntaci k integraci IPEX ↔ AbraFlexi se zaměřením na logiku minimální fakturace.
 
 ## Logika minimální fakturace (Invoicing Threshold)
 
@@ -18,6 +40,8 @@ Aby se nevystavovaly zbytečně malé faktury, integrace používá konfigurovat
 
 ### Používané proměnné prostředí
 
+#### Základní konfigurace
+
 - `ABRAFLEXI_MINIMAL_INVOICING` – limit pro fakturaci
 - `ABRAFLEXI_PRODUCT` – kód produktu, který musí být v objednávce přítomen
 - `ABRAFLEXI_ORDERTYPE` – typ objednávkového dokladu
@@ -25,6 +49,21 @@ Aby se nevystavovaly zbytečně malé faktury, integrace používá konfigurovat
 - `ABRAFLEXI_SKIPLIST` – seznam kódů zákazníků k přeskočení (vyhledává se podřetězec)
 - `ABRAFLEXI_SEND` – zda označit fakturu k odeslání e‑mailem
 - `ABRAFLEXI_CREATE_EMPTY_ORDERS` – vytváření prázdných (nulových) objednávek
+
+#### Řízení PDF a emailů
+
+- `ATTACH_CALL_LIST_PDF` – povolit/zakázat připojování PDF seznamu hovorů k objednávkám/fakturám (true/false, výchozí: true)
+- `SEND_CALL_LIST_EMAIL` – povolit/zakázat odesílání PDF emailem zákazníkům (true/false, výchozí: true)
+
+**Poznámka:** PDF se generuje pouze pokud bude použito - tj. alespoň jedna z možností (`ATTACH_CALL_LIST_PDF` nebo `SEND_CALL_LIST_EMAIL`) je povolena.
+
+#### Časové nastavení
+
+- `MONTH_OFFSET` – posun měsíce pro zpracování (záporné hodnoty pro minulé měsíce, např. -1 pro minulý měsíc)
+
+#### Výstup
+
+- `RESULT_FILE` – cesta k souboru pro uložení výsledků zpracování
 
 ### Hraniční situace
 

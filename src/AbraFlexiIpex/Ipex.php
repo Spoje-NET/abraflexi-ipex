@@ -717,20 +717,38 @@ class Ipex extends \Ease\Sand
                 $order->sync() ? 'success' : 'error',
             );
 
-            $pdfCallLog = $this->pdfCallLog((int) $invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
+            // Check what actions are enabled for call list processing
+            $attachPdfToOrder = strtolower(\Ease\Shared::cfg('ATTACH_CALL_LIST_PDF', 'true')) === 'true';
+            $sendByEmail = strtolower(\Ease\Shared::cfg('SEND_CALL_LIST_EMAIL', 'true')) === 'true';
+            
+            // Generate PDF only if it will be used (attached to order OR sent by email)
+            $shouldGeneratePdf = $attachPdfToOrder || $sendByEmail;
 
-            $callLogFilename = sys_get_temp_dir().'/'.str_replace(
-                [' ', ':'],
-                ['_', '-'],
-                \Ease\Functions::rip($order->getDataValue('popis')),
-            ).'.pdf';
+            if ($shouldGeneratePdf) {
+                $pdfCallLog = $this->pdfCallLog((int) $invoiceRaw['customerId'], $order->getDataValue('nazFirmy'));
 
-            file_put_contents($callLogFilename, $pdfCallLog);
-            \AbraFlexi\Priloha::addAttachmentFromFile($order, $callLogFilename);
+                $callLogFilename = sys_get_temp_dir().'/'.str_replace(
+                    [' ', ':'],
+                    ['_', '-'],
+                    \Ease\Functions::rip($order->getDataValue('popis')),
+                ).'.pdf';
 
-            $this->sendCallListByMail($order, $callLogFilename);
+                file_put_contents($callLogFilename, $pdfCallLog);
+                
+                // Attach to order only if enabled
+                if ($attachPdfToOrder) {
+                    \AbraFlexi\Priloha::addAttachmentFromFile($order, $callLogFilename);
+                }
 
-            unlink($callLogFilename);
+                // Send by email only if enabled
+                if ($sendByEmail) {
+                    $this->sendCallListByMail($order, $callLogFilename);
+                }
+
+                unlink($callLogFilename);
+            } else {
+                $this->addStatusMessage('PDF call list generation skipped (not needed for attachment or email)', 'info');
+            }
         } else {
             $order->addStatusMessage($this->counter.$invoiceRaw['customerName'].' 0,-', 'debug');
         }
