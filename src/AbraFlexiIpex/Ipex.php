@@ -183,30 +183,37 @@ class Ipex extends \Ease\Sand
         $monthOffset = $periodOptions['monthOffset'] ?? -1;
 
         // Set target month boundaries for filtering
+        // monthOffset is always negative - we work with one specific month from the past
         $this->since = new \DateTime('first day of this month');
         $this->since->modify((string) $monthOffset.' month');
         $this->until = clone $this->since;
         $this->until->modify('last day of this month');
 
-        // IPEX API provides records from monthOffset to now, so we need to filter
+        // IPEX API provides records from monthOffset to now, but we need only the specific target month
+        // Use monthOffset to get data that includes our target month
         $grabber->setUrlParams(['monthOffset' => $monthOffset]);
 
         $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 50);
 
         $rawInvoices = $grabber->requestData('postpaid');
-
-        // Since IPEX API returns records from monthOffset to now,
-        // we need to filter to only include the target month
+        
+        // Filter to include only invoices that belong to our specific target month
         if (\is_array($rawInvoices)) {
             $filteredInvoices = [];
 
             foreach ($rawInvoices as $invoice) {
+                // Convert UTC dates to local timezone for proper month comparison
                 $invoiceStart = new \DateTime($invoice['dateStart']);
-                $invoiceEnd = new \DateTime($invoice['dateEnd']);
+                $invoiceStart->setTimezone(new \DateTimeZone('Europe/Prague'));
 
-                // Only include invoices that fall within our target month
-                // (not just overlap, but actually belong to that month)
-                if ($invoiceStart >= $this->since && $invoiceStart <= $this->until) {
+                // Check if the invoice period belongs to our target month
+                // We compare the year and month of the invoice start date with our target month
+                $targetYear = (int) $this->since->format('Y');
+                $targetMonth = (int) $this->since->format('n');
+                $invoiceYear = (int) $invoiceStart->format('Y');
+                $invoiceMonth = (int) $invoiceStart->format('n');
+
+                if ($targetYear === $invoiceYear && $targetMonth === $invoiceMonth) {
                     $filteredInvoices[] = $invoice;
                 }
             }

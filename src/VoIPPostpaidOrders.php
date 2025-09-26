@@ -42,9 +42,15 @@ if (Shared::cfg('APP_DEBUG', false)) {
 }
 
 // Set monthOffset from command line options, environment variable, or default to -1
+// monthOffset should always be negative for working with past months
 $monthOffset = isset($options['monthOffset']) ? (int) $options['monthOffset'] :
                (isset($options['m']) ? (int) $options['m'] :
                (int) Shared::cfg('MONTH_OFFSET', -1));
+
+// Ensure monthOffset is negative (for past months)
+if ($monthOffset > 0) {
+    $monthOffset = -$monthOffset;
+}
 $dateFrom = $options['dateFrom'] ?? ($options['f'] ?? null);
 $dateTo = $options['dateTo'] ?? ($options['t'] ?? null);
 
