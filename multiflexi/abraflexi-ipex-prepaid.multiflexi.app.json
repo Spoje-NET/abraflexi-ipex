@@ -108,7 +108,7 @@
             "required": false
         },
         "MONTH_OFFSET": {
-            "type": "int",
+            "type": "integer",
             "description": "Month offset for processing (negative values for past months, e.g. -1 for last month)",
             "defval": -1,
             "required": false
