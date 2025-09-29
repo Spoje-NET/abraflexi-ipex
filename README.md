@@ -2,6 +2,12 @@
 
 Ipex ⛗ AbraFlexi integration
 
+<p align="center">
+    <img src="multiflexi/262dabf1-d7b1-42c8-91a1-fe991631547c.svg?raw=true" alt="Postpaid IPEX to AbraFlexi Invoices" width="120" />
+    <img src="multiflexi/51b247aa-fd48-44d7-8494-8c86b05e5a66.svg?raw=true" alt="Postpaid IPEX to AbraFlexi Orders" width="120" />
+    <img src="multiflexi/74816157-8540-49c7-bfbd-423e8ed4fbfd.svg?raw=true" alt="Prepaid IPEX to AbraFlexi" width="120" />
+</p>
+
 ## Table of Contents
 
 - [Introduction](#introduction)
