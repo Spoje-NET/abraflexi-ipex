@@ -51,6 +51,7 @@ $monthOffset = isset($options['monthOffset']) ? (int) $options['monthOffset'] :
 if ($monthOffset > 0) {
     $monthOffset = -$monthOffset;
 }
+
 $dateFrom = $options['dateFrom'] ?? ($options['f'] ?? null);
 $dateTo = $options['dateTo'] ?? ($options['t'] ?? null);
 

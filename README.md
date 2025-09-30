@@ -10,11 +10,13 @@ Ipex ⛗ AbraFlexi integration
 
 ## Table of Contents
 
-- [Introduction](#introduction)
+- [Introduction](#introduction)  
 - [Features](#features)
+- [Technical Requirements](#technical-requirements)
 - [Installation](#debianubuntu-installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -39,6 +41,25 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 
 - **[Enhanced Audit Reporting](AUDIT_REPORTS.md)**: Comprehensive transaction tracking and detailed reporting
 - **[MultiFlexi Report Format](MULTIFLEXI_REPORTS.md)**: Standardized reporting for MultiFlexi platform integration
+- **PHP 8.4+ Compatibility**: Full support for PHP 8.4 with proper typed property handling
+- **Improved Error Handling**: Better handling of uninitialized properties and edge cases
+- **MonthOffset Calculation**: Enhanced month offset logic with automatic sign correction for past periods
+- **Timezone Conversion**: Proper UTC to local timezone conversion for accurate date filtering
+
+## Technical Requirements
+
+- **PHP**: 8.2 or later (tested with PHP 8.4)
+- **AbraFlexi**: Compatible with current AbraFlexi versions
+- **IPEX API**: B2B API access required
+- **Extensions**: PHP extensions for HTTP clients and JSON processing
+
+### PHP 8.4+ Compatibility
+
+This application is fully compatible with PHP 8.4 and includes:
+- Proper typed property initialization
+- Nullable property handling for optional date ranges
+- Enhanced error handling for uninitialized properties
+- PSR-12 coding standard compliance
 
 ## Configuration
 
@@ -75,9 +96,20 @@ To use the `abraflexi-ipex` integration, run the following commands:
     # Process specific month (any time execution)
     abraflexi-ipex-postpaid-orders -m -2  # Process 2 months ago
     
+    # Continue mode - automatically calculate next period from last generated order
+    abraflexi-ipex-postpaid-orders --continue
+    abraflexi-ipex-postpaid-orders -c  # Short form
+    
     # Generate MultiFlexi-compliant report
     abraflexi-ipex-postpaid-orders -o multiflexi_orders_report.json
     ```
+
+### Command Line Options
+
+- `-m, --monthOffset`: Specify the number of months back to process (always negative for past months)
+- `-c, --continue`: Automatically calculate the next period based on the last generated order
+- `-o, --output`: Specify output file for reports (default: stdout)
+- `-e, --environment`: Specify custom environment file path
 
 - For previously saved orders to generate invoices:
 
@@ -130,6 +162,15 @@ Example output:
     ```sh
     abraflexi-ipex-setup
     ```
+
+## Documentation
+
+Additional documentation is available:
+
+- **[CHANGELOG.md](CHANGELOG.md)**: Detailed changelog with version history and changes
+- **[PHP84_COMPATIBILITY.md](PHP84_COMPATIBILITY.md)**: Technical guide for PHP 8.4+ compatibility and typed properties
+- **[AUDIT_REPORTS.md](AUDIT_REPORTS.md)**: Enhanced audit reporting documentation
+- **[MULTIFLEXI_REPORTS.md](MULTIFLEXI_REPORTS.md)**: MultiFlexi report format specification
 
 ## Contributing
 

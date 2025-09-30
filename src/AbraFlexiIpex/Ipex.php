@@ -20,7 +20,19 @@ use AbraFlexi\ObjednavkaPrijata;
 use Ease\Mailer;
 
 /**
- * Description of IPEX.
+ * IPEX API Integration with AbraFlexi.
+ *
+ * Handles integration between IPEX VoIP service and AbraFlexi ERP system.
+ * Processes postpaid calls, generates orders and invoices, and manages
+ * customer communications with call lists.
+ *
+ * Features:
+ * - IPEX API data retrieval with monthOffset support
+ * - AbraFlexi order and invoice generation
+ * - Timezone-aware date processing (UTC to Europe/Prague)
+ * - Duplicate prevention for orders and invoices
+ * - Email notifications with call lists
+ * - PHP 8.4+ compatible with typed properties
  *
  * @author Vítězslav Dvořák <info@vitexsoftware.cz>
  */
@@ -28,8 +40,16 @@ class Ipex extends \Ease\Sand
 {
     public float $invoicingLimit = 50.0;
     public FakturaVydana $invoicer;
-    public \DateTime $since;
-    public \DateTime $until;
+
+    /**
+     * Start date of the target period (nullable for flexible usage).
+     */
+    public ?\DateTime $since = null;
+
+    /**
+     * End date of the target period (nullable for flexible usage).
+     */
+    public ?\DateTime $until = null;
     private string $counter = '';
     private ObjednavkaPrijata $order;
 
@@ -47,6 +67,11 @@ class Ipex extends \Ease\Sand
 
     /**
      * Get the date of the last generated order.
+     *
+     * Used in continue mode to determine the next period to process.
+     * Scans all prepared orders to find the latest order date.
+     *
+     * @return null|\DateTime The date of the last generated order, or null if no orders exist
      */
     public function getLastOrderDate(): ?\DateTime
     {
@@ -163,18 +188,22 @@ class Ipex extends \Ease\Sand
     }
 
     /**
-     * Get IPEX invoices data for last month.
+     * Get IPEX invoices data for a specific period.
      *
-     * @param mixed $periodOptions
+     * Retrieves invoice data from IPEX API for a given month offset and filters
+     * the results to include only invoices from the target month. Handles timezone
+     * conversion from UTC to Europe/Prague for accurate month matching.
      *
-     * @return array<int, array<string, string>>
-     */
-    /**
-     * Get IPEX invoices data for a custom period.
+     * Features:
+     * - Sets $this->since and $this->until properties for the target period
+     * - Automatically converts monthOffset (negative values for past months)
+     * - Filters API results to specific target month only
+     * - Handles timezone conversion for accurate date comparisons
      *
-     * @param array $periodOptions ['monthOffset'=>int]
+     * @param array $periodOptions Options array with 'monthOffset' key (default: -1)
+     *                             monthOffset should be negative for past months
      *
-     * @return array<int, array<string, string>>|bool
+     * @return array<int, array<string, string>>|bool Array of filtered invoice data or false on error
      */
     public function getIpexInvoices($periodOptions = []): array|bool
     {
@@ -196,7 +225,7 @@ class Ipex extends \Ease\Sand
         $this->invoicingLimit = (float) \Ease\Shared::cfg('ABRAFLEXI_MINIMAL_INVOICING', 50);
 
         $rawInvoices = $grabber->requestData('postpaid');
-        
+
         // Filter to include only invoices that belong to our specific target month
         if (\is_array($rawInvoices)) {
             $filteredInvoices = [];
@@ -689,7 +718,7 @@ class Ipex extends \Ease\Sand
             'stavUzivK' => 'stavDoklObch.pripraveno',
             'zaokrNaSumK' => 'zaokrNa.zadne',
             'zaokrNaDphK' => 'zaokrNa.zadne',
-            'datVyst' => $this->since->format('Y-m-d'), // Set order date to beginning of target month
+            'datVyst' => isset($this->since) ? $this->since->format('Y-m-d') : $startDate->format('Y-m-d'), // Set order date to beginning of target month
             'popis' => _('IPEX Postpaid'),
         ]);
 
@@ -941,7 +970,7 @@ class Ipex extends \Ease\Sand
         $customerExtId = (string) $firstOrder['firma'];
 
         // Check if invoice already exists for this customer and period
-        if ($this->invoiceExistsForPeriod($customerExtId, $this->since, $this->until)) {
+        if (isset($this->since, $this->until) && $this->invoiceExistsForPeriod($customerExtId, $this->since, $this->until)) {
             $this->addStatusMessage(
                 $this->counter.$customerExtId.' - Invoice already exists for period '.self::formatDate($this->since).' - '.self::formatDate($this->until),
                 'info',
@@ -984,17 +1013,23 @@ class Ipex extends \Ease\Sand
             }
         }
 
-        $startDate = clone $this->since;
-        $startDate->modify(' -'.\count($callsOrders).' month')->modify('first day of next month');
+        if (isset($this->since)) {
+            $startDate = clone $this->since;
+            $startDate->modify(' -'.\count($callsOrders).' month')->modify('first day of next month');
+        }
 
         $invoice->setDataValue(
             'popis',
-            'Telefonní služby '._('from').' '.self::formatDate($this->since).' '._('to').' '.self::formatDate($this->until),
+            isset($this->since, $this->until) ?
+                'Telefonní služby '._('from').' '.self::formatDate($this->since).' '._('to').' '.self::formatDate($this->until) :
+                'Telefonní služby',
         );
 
         $invoice->setDataValue('uvodTxt', 'Fakturujeme Vám hlasové služby');
 
-        $invoice->setDataValue('duzpPuv', \AbraFlexi\Date::fromDateTime($this->until));
+        if (isset($this->until)) {
+            $invoice->setDataValue('duzpPuv', \AbraFlexi\Date::fromDateTime($this->until));
+        }
 
         if ($invoice->sync()) {
             $invoice->addStatusMessage(

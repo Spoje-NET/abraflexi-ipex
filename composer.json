@@ -3,8 +3,9 @@
     "description": "Ipex ⛗ AbraFlexi integration",
     "type": "project",
     "require": {
+        "php": ">=8.2",
         "mpdf/mpdf": "^8.2",
-        "spojenet/flexibee": "^2025.7",
+        "spojenet/flexibee": "dev-main",
         "spojenet/ipexb2b": "dev-main",
         "vitexsoftware/ease-html": "^1.40"
     },
