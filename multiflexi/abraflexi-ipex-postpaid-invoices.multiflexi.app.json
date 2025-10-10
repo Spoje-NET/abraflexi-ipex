@@ -1,142 +1,231 @@
 {
-    "name": "Postpaid IPEX to AbraFlexi Invoices",
-    "description": "Generate invoices from Orders using AbraFlexi",
-    "executable": "abraflexi-ipex-postpaid-invoices",
-    "setup": "abraflexi-ipex-setup",
-    "cmdparams": "",
-    "deploy": "apt install abraflexi-ipex",
-    "homepage": "https://github.com/Spoje-NET/abraflexi-ipex",
-    "requirements": ["AbraFlexi"],
-    "ociimage": "",
-    "topics": ["AbraFlexi", "Ipex", "Invoice"],
+    "$schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json",
+    "schemaVersion": "3.0.0",
     "uuid": "262dabf1-d7b1-42c8-91a1-fe991631547c",
-    "produces": {
-        "invoices": {
-            "description": "AbraFlexi invoices created from orders",
-            "format": "json"
-        }
+    "name": {
+        "en": "Postpaid IPEX to AbraFlexi Invoices",
+        "cs": "Postpaid IPEX to AbraFlexi Invoices"
     },
+    "description": {
+        "en": "Generate invoices from Orders using AbraFlexi",
+        "cs": "Generate invoices from Orders using AbraFlexi"
+    },
+    "tags": [
+        "AbraFlexi",
+        "Ipex",
+        "Invoice"
+    ],
+    "homepage": "https://github.com/Spoje-NET/abraflexi-ipex",
+    "executable": "abraflexi-ipex-postpaid-invoices",
     "environment": {
         "APP_DEBUG": {
             "type": "bool",
-            "description": "Show debug messages",
+            "description": {
+                "en": "Show debug messages",
+                "cs": "Show debug messages"
+            },
             "defval": "False",
-            "required": false
+            "required": false,
+            "category": "Behavior"
         },
         "RESULT_FILE": {
             "type": "string",
-            "description": "write output json data to",
+            "description": {
+                "en": "write output json data to",
+                "cs": "write output json data to"
+            },
             "defval": "multiflexi_ipex_invoices_{ABRAFLEXI_COMPANY}.json",
-            "required": false
+            "required": false,
+            "category": "Other"
         },
         "EASE_LOGGER": {
             "type": "string",
-            "description": "Logger type",
+            "description": {
+                "en": "Logger type",
+                "cs": "Logger type"
+            },
             "defval": "syslog|console",
-            "required": false
+            "required": false,
+            "category": "Behavior"
         },
         "EMAIL_FROM": {
             "type": "string",
-            "description": "Email from address",
+            "description": {
+                "en": "Email from address",
+                "cs": "Email from address"
+            },
             "defval": "michal.tomasek@spojenet.cz",
-            "required": true
+            "required": true,
+            "category": "Other"
         },
         "SEND_INFO_TO": {
             "type": "string",
-            "description": "Send info to address",
+            "description": {
+                "en": "Send info to address",
+                "cs": "Send info to address"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "Other"
         },
         "ABRAFLEXI_URL": {
             "type": "string",
-            "description": "AbraFlexi URL",
+            "description": {
+                "en": "AbraFlexi URL",
+                "cs": "AbraFlexi URL"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_LOGIN": {
             "type": "string",
-            "description": "AbraFlexi login",
+            "description": {
+                "en": "AbraFlexi login",
+                "cs": "AbraFlexi login"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_PASSWORD": {
-            "type": "string",
-            "description": "AbraFlexi password",
+            "type": "password",
+            "description": {
+                "en": "AbraFlexi password",
+                "cs": "AbraFlexi password"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_COMPANY": {
             "type": "string",
-            "description": "AbraFlexi company",
+            "description": {
+                "en": "AbraFlexi company",
+                "cs": "AbraFlexi company"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_ORDERTYPE": {
             "type": "string",
-            "description": "AbraFlexi order type",
+            "description": {
+                "en": "AbraFlexi order type",
+                "cs": "AbraFlexi order type"
+            },
             "defval": "code:OBP_VOIP",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_SEND": {
             "type": "bool",
-            "description": "Send created invoices immediately",
+            "description": {
+                "en": "Send created invoices immediately",
+                "cs": "Send created invoices immediately"
+            },
             "defval": "False",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_PRODUCT": {
             "type": "string",
-            "description": "AbraFlexi product",
+            "description": {
+                "en": "AbraFlexi product",
+                "cs": "AbraFlexi product"
+            },
             "defval": "code:IPEX_POSTPAID",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_DOCTYPE": {
             "type": "string",
-            "description": "AbraFlexi document type",
+            "description": {
+                "en": "AbraFlexi document type",
+                "cs": "AbraFlexi document type"
+            },
             "defval": "code:FAKTURA",
-            "required": true
+            "required": true,
+            "category": "API"
         },
         "ABRAFLEXI_SKIPLIST": {
             "type": "string",
-            "description": "AbraFlexi skip list",
+            "description": {
+                "en": "AbraFlexi skip list",
+                "cs": "AbraFlexi skip list"
+            },
             "defval": "",
-            "required": false
+            "required": false,
+            "category": "API"
         },
         "IPEX_URL": {
             "type": "string",
-            "description": "Ipex URL",
+            "description": {
+                "en": "Ipex URL",
+                "cs": "Ipex URL"
+            },
             "defval": "https://restapi.ipex.cz",
-            "required": true
+            "required": true,
+            "category": "Other"
         },
         "IPEX_LOGIN": {
             "type": "string",
-            "description": "Ipex login",
+            "description": {
+                "en": "Ipex login",
+                "cs": "Ipex login"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "Other"
         },
         "IPEX_PASSWORD": {
-            "type": "string",
-            "description": "Ipex password",
+            "type": "password",
+            "description": {
+                "en": "Ipex password",
+                "cs": "Ipex password"
+            },
             "defval": "",
-            "required": true
+            "required": true,
+            "category": "Security"
         },
         "MONTH_OFFSET": {
             "type": "integer",
-            "description": "Month offset for processing (negative values for past months, e.g. -1 for last month)",
+            "description": {
+                "en": "Month offset for processing (negative values for past months, e.g. -1 for last month)",
+                "cs": "Month offset for processing (negative values for past months, e.g. -1 for last month)"
+            },
             "defval": -1,
-            "required": false
+            "required": false,
+            "category": "Other"
         },
         "ATTACH_CALL_LIST_PDF": {
             "type": "bool",
-            "description": "Enable attaching PDF call list to invoices in AbraFlexi",
+            "description": {
+                "en": "Enable attaching PDF call list to invoices in AbraFlexi",
+                "cs": "Enable attaching PDF call list to invoices in AbraFlexi"
+            },
             "defval": "True",
-            "required": false
+            "required": false,
+            "category": "Other"
         },
         "SEND_CALL_LIST_EMAIL": {
             "type": "bool",
-            "description": "Enable sending call list PDF by email to customers",
+            "description": {
+                "en": "Enable sending call list PDF by email to customers",
+                "cs": "Enable odeslating call list PDF by ee-mail to customers"
+            },
             "defval": "True",
-            "required": false
+            "required": false,
+            "category": "Other"
         }
     },
-    "multiflexi": "1.20.0"
+    "produces": {
+        "invoices": {
+            "description": {
+                "en": "AbraFlexi invoices created from orders",
+                "cs": "AbraFlexi invoices created from orders"
+            },
+            "format": "json"
+        }
+    }
 }
