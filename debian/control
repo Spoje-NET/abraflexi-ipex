@@ -17,7 +17,7 @@ Description: Ipex ⛗ AbraFlexi integration
  Create Invoices for Pepaid & Postpaid Ipex calls in AbraFlexi
 
 Package: multiflexi-abraflexi-ipex
-Depends: multiflexi, abraflexi-ipex
+Depends: multiflexi-cli, abraflexi-ipex
 Architecture: all
 Section: web
 Priority: optional
