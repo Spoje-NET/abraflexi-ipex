@@ -77,7 +77,7 @@ Environment variables defined in `.env.example`:
 Project includes MultiFlexi application definitions in `multiflexi/`:
 - JSON schema validation required (see rule about schema compliance)
 - Each `.app.json` must conform to MultiFlexi application schema
-- Validate with: `multiflexi-cli application validate-json --json multiflexi/[filename].app.json`
+- Validate with: `multiflexi-cli application validate-json --file multiflexi/[filename].app.json`
 
 ### Debian Packaging
 Full Debian packaging support in `debian/` directory with:

@@ -1,56 +1,147 @@
-# Copilot Instructions
+# GitHub Copilot Instructions for AbraFlexi-IPEX
 
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+<!-- Custom workspace instructions for GitHub Copilot -->
+<!-- Learn more: https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot -->
 
-All code comments should be written in English.
+## 📋 Project Overview
+This is a PHP-based MultiFlexi application that integrates IPEX VoIP services with AbraFlexi accounting system. The application processes call data, generates invoices, and manages customer billing.
 
-All messages, including error messages, should be written in English.
+## 🔧 Technical Standards
 
-All code should be written in PHP 8.4 or later.
+### Language & Framework Requirements
+- **PHP Version**: 8.4+ (use modern PHP features like readonly properties, enums, etc.)
+- **Coding Standard**: PSR-12 compliance mandatory
+- **Architecture**: Follow SOLID principles and clean code practices
+- **Framework**: MultiFlexi framework for application structure
 
-All code should follow the PSR-12 coding standard.
+### Code Quality Requirements
+- **Documentation**: Every class, method, and function MUST have comprehensive DocBlocks with:
+  - Purpose description
+  - @param tags with types and descriptions
+  - @return tags with types and descriptions
+  - @throws tags for exceptions
+  - @example tags where helpful
+- **Type Safety**: Always use strict typing (`declare(strict_types=1)`) and type hints
+- **Error Handling**: Use proper exception handling with meaningful error messages
+- **Variables**: Use descriptive, intention-revealing variable names
+- **Constants**: Replace magic numbers/strings with named constants or enums
+- **Performance**: Consider performance implications, especially for batch operations
 
-When writing code, always include a docblock for functions and classes, describing their purpose, parameters, and return types.
+### Testing Requirements
+- **Framework**: PHPUnit for all tests
+- **Coverage**: Every new class MUST have corresponding test files
+- **Location**: Tests go in `tests/` directory mirroring `src/` structure
+- **Naming**: Test classes should end with `Test` suffix
+- **Standards**: Follow PSR-12 in test code as well
 
-When writing tests, use PHPUnit and follow the PSR-12 coding standard.
+- **Standards**: Follow PSR-12 in test code as well
 
-When writing documentation, use MarkDown format.
+### Internationalization
+- **Library**: Use i18n library for all user-facing strings
+- **Function**: Wrap translatable strings with `_()` function
+- **Language**: All code, comments, and error messages in English
 
-When writing commit messages, use the imperative mood and keep them concise.
+### Security & Performance
+- **Security**: Never expose sensitive information in code or logs
+- **Validation**: Always validate user inputs and API responses
+- **Logging**: Use appropriate log levels and structured logging
+- **Optimization**: Profile and optimize database queries and API calls
 
-When writing code comments, use complete sentences and proper grammar.
+## 🔍 Development Workflow
 
-When writing code, always use meaningful variable names that describe their purpose.
+### Mandatory Quality Checks
+1. **PHP Syntax Check**: After EVERY PHP file edit, run `php -l filename.php`
+2. **Schema Validation**: Before committing, validate JSON files against schemas
+3. **Test Execution**: Run relevant tests after code changes
+4. **Code Review**: Ensure code follows all standards before committing
 
-When writing code, avoid using magic numbers or strings; instead, define constants for them.
+### Git Commit Standards
+- **Format**: Use imperative mood ("Add feature" not "Added feature")
+- **Length**: Keep subject line under 50 characters
+- **Body**: Include detailed description for complex changes
+- **Scope**: Make atomic commits focused on single changes
 
-When writing code, always handle exceptions properly and provide meaningful error messages.
+## 📊 MultiFlexi Application Standards
 
-When writing code, always include type hints for function parameters and return types.
+### JSON Configuration Files
+All `multiflexi/*.app.json` files MUST conform to the official schema:
+- **Schema URL**: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json
+- **Validation**: Always validate against schema before modifying
+- **Structure**: Follow exact schema requirements for all properties
+- **Environment Variables**: Use proper types (string, int, bool) and meaningful descriptions
 
-We are using the i18n library for internationalization, so always use the _() functions for strings that need to be translated.
+### Report Generation
+Generated reports MUST conform to the MultiFlexi report schema:
+- **Schema URL**: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json
+- **Format**: JSON format with proper structure
+- **Content**: Include all required fields (timestamp, status, summary, etc.)
 
-When writing code, always ensure that it is secure and does not expose any sensitive information.
+### Validation Commands
+```bash
+# JSON syntax validation
+find multiflexi/ -name "*.json" -exec python3 -m json.tool {} \; -print
 
-When writing code, always consider performance and optimize where necessary.
+# Schema validation (requires: pip install jsonschema requests)
+python3 -c "
+import json, requests, jsonschema, glob
+schema = requests.get('https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json').json()
+[jsonschema.validate(json.load(open(f)), schema) or print(f'✅ {f} is valid') for f in glob.glob('multiflexi/*.json')]
+"
+```
 
-When writing code, always ensure that it is compatible with the latest version of PHP and the libraries we are using.
+## 🔌 API Integration Standards
 
-When writing code, always ensure that it is well-tested and includes unit tests where applicable.
+### IPEX API Integration
+- **Documentation**: Always refer to https://restapi.ipex.cz/swagger.json
+- **Authentication**: Use proper API credentials management
+- **Error Handling**: Handle API timeouts, rate limits, and error responses
+- **Data Validation**: Validate all API responses before processing
+- **Caching**: Implement appropriate caching for frequently accessed data
 
-When writing code, always ensure that it is maintainable and follows best practices.
+### AbraFlexi Integration
+- **SDK**: Use official AbraFlexi PHP SDK
+- **Transactions**: Wrap related operations in transactions
+- **Error Recovery**: Implement proper error recovery mechanisms
+- **Data Integrity**: Ensure data consistency between systems
 
-When create new class or update existing class, always create or update its phpunit test files.
+## 🎯 Code Generation Guidelines
 
+When generating code:
 
-All files in the multiflexi/*.app.json directory must conform to the schema available at: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json
+1. **Start with interfaces/contracts** before implementations
+2. **Use dependency injection** for better testability  
+3. **Implement proper logging** at appropriate levels
+4. **Add configuration validation** for environment variables
+5. **Include comprehensive error handling** with user-friendly messages
+6. **Write tests first** (TDD approach preferred)
+7. **Document complex business logic** with inline comments
+8. **Use meaningful method/class names** that express intent
 
-When modifying or creating multiflexi/*.app.json files, always validate them against the schema before making changes. Use tools to check JSON schema compliance.
+## 🚫 Avoid These Patterns
 
-All produced reports must conform to the schema available at: https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json
+- Hard-coded values (use configuration/environment variables)
+- Silent failures (always log errors appropriately)
+- Overly complex methods (follow single responsibility principle)
+- Missing type declarations (always use strict typing)
+- Inadequate error messages (provide context and solutions)
+- Tight coupling between classes (use dependency injection)
+- Direct database queries in business logic (use repositories/services)
 
-When modifying JSON files or creating new multiflexi applications, always verify the JSON syntax and schema compliance as part of the development process.
+## 📚 Helpful Context
 
-When writing code that interacts with the IPEX API, always refer to the official documentation at https://restapi.ipex.cz/swagger.json for guidance on endpoints, parameters, and best practices.
+### Project Structure
+- `src/` - Main application code
+- `tests/` - PHPUnit test files
+- `multiflexi/` - MultiFlexi application configurations
+- `bin/` - Executable scripts
+- `debian/` - Debian packaging files
 
+### Key Dependencies
+- AbraFlexi PHP SDK
+- MultiFlexi Core Framework
+- mPDF for PDF generation
+- Monolog for logging
+- PHPUnit for testing
+
+This project integrates VoIP call data from IPEX with AbraFlexi accounting system to automate billing processes for telecommunications services.
 
