@@ -23,3 +23,16 @@ vendor: composer.json composer.lock ## Installs composer dependencies
 cs: ## Update Coding Standards
 	vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --diff --verbose
 
+.PHONY: validate-multiflexi-app
+validate-multiflexi-app: ## Validates the multiflexi JSON
+	@if [ -d multiflexi ]; then \
+		for file in multiflexi/*.multiflexi.app.json; do \
+			if [ -f "$$file" ]; then \
+				echo "Validating $$file"; \
+				multiflexi-cli app validate-json --file="$$file"; \
+			fi; \
+		done; \
+	else \
+		echo "No multiflexi directory found"; \
+	fi
+
