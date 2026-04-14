@@ -1,0 +1,34 @@
+{
+    "id": "ipex.multiflexi",
+    "name": "IPEX Multiflexi",
+    "description": "Credentials required for connecting to IPEX via Multiflexi",
+    "version": "0.1.0",
+    "type": "credential",
+    "code": "Ipex",
+    "uuid": "9070d1dc-8dba-40ed-8aab-211a6babcb9e",
+    "fields": [
+        {
+            "keyword": "IPEX_URL",
+            "type": "string",
+            "title": "IPEX API URL",
+            "description": "Base URL of the IPEX API endpoint",
+            "required": true,
+            "example": "https://ipex.example.com/api"
+        },
+        {
+            "keyword": "IPEX_LOGIN",
+            "type": "string",
+            "title": "IPEX Login",
+            "description": "Username used for IPEX authentication",
+            "required": true,
+            "example": "ipex_user"
+        },
+        {
+            "keyword": "IPEX_PASSWORD",
+            "type": "password",
+            "title": "IPEX Password",
+            "description": "Password used for IPEX authentication",
+            "required": true
+        }
+    ]  
+}
