@@ -37,6 +37,11 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 
 > Czech documentation for the invoicing threshold logic is available in `README.cs.md`.
 
+### New in Version 1.2.1
+
+- **PHP 8.4+ Compatibility**: Fixed typed property initialization — `$since` / `$until` are now nullable
+- **`createOrder` fix**: `datObj` falls back to `dateStart` when the IPEX payload lacks a `datetime` key, preventing a fatal AbraFlexi "null must be a date" error for new customers
+
 ### New in Version 1.2.0
 
 - **[Enhanced Audit Reporting](AUDIT_REPORTS.md)**: Comprehensive transaction tracking and detailed reporting
@@ -78,11 +83,14 @@ The [.env](.env.example) file contains the necessary configuration for the integ
 - `ABRAFLEXI_PRODUCT`: Product code in AbraFlexi
 - `ABRAFLEXI_DOCTYPE`: Document type code in AbraFlexi
 - `ABRAFLEXI_SKIPLIST`: List of items to skip during synchronization
-- `ABRAFLEXI_MINIMAL_INVOICING`: do not create too low invoices (default is 50))
-- `ABRAFLEXI_CREATE_EMPTY_ORDERS`: just be sure that month was processed
+- `ABRAFLEXI_MINIMAL_INVOICING`: Minimum invoice amount threshold — invoices below this value are skipped (default: `50`)
+- `ABRAFLEXI_CREATE_EMPTY_ORDERS`: Create orders even when the billed amount is zero, to confirm the month was processed (default: `true`)
 - `IPEX_URL`: URL of the Ipex API
 - `IPEX_LOGIN`: Login username for Ipex
 - `IPEX_PASSWORD`: Password for Ipex
+- `ATTACH_CALL_LIST_PDF`: Attach a PDF call list to the created order (default: `true`)
+- `SEND_CALL_LIST_EMAIL`: Send the call list PDF to the customer by email (default: `true`)
+- `MULTIFLEXI_JOB_ID`: When set, appends the MultiFlexi job ID to order notes for traceability
 
 ## Usage
 
@@ -123,32 +131,10 @@ To use the `abraflexi-ipex` integration, run the following commands:
 Example output:
 
 ```
-01/17/2025 21:55:09 ⚙ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ IPEXPostPaidInvoices EaseCore 1.45.0 (PHP 8.2.27)
-01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:01183
-01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:03489
-01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Unknown AbraFlexi customer. No invoice created.
-01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:01846
-01/17/2025 21:55:10 ⚠ ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Ipex Customer Without externalId: code:02509
-{
-    "code:01183": {
-        "invoice": "Not an Ipex customer: code:01183 ?"
-    },
-    "code:03489": {
-        "invoice": "Not an Ipex customer: code:03489 ?"
-    },
-    "nocustomer": [
-        "OBP0022\/2025",
-        "OBP0044\/2025",
-        "OBP0122\/2025",
-        "OBP0296\/2025"
-    ],
-    "code:01846": {
-        "invoice": "Not an Ipex customer: code:01846 ?"
-    },
-    "code:02509": {
-        "invoice": "Not an Ipex customer: code:02509 ?"
-    }
-}01/17/2025 21:55:10 🌼 ❲IPEXPostPaidInvoices⦒SpojeNet\AbraFlexiIpex\Ipex❳ Saving result to php://stdout
+04/15/2026 08:00:01 ⚙ ❲IPEXPostPaidOrders⦒SpojeNet\AbraFlexiIpex\Ipex❳ IPEXPostPaidOrders EaseCore v1.50.1 (PHP 8.4.16)
+04/15/2026 08:00:05 🌼 ❲IPEXPostPaidOrders⦒AbraFlexi\ObjednavkaPrijata❳ #1/34 Soukromá základní škola Cesta k úspěchu 9.64 CZK
+04/15/2026 08:00:05 ℹ ❲IPEXPostPaidOrders⦒SpojeNet\AbraFlexiIpex\Ipex❳ PDF call list generation skipped (not needed for attachment or email)
+...
 ```
 
 - To send prepaid call list to customer:
