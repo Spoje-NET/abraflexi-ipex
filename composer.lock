@@ -816,12 +816,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Spoje-NET/ipex-b2b.git",
-                "reference": "98a6b8ca640a03dca24268a3b39b66fdea20aac9"
+                "reference": "1384ee663514358e10cdfa100f0423b662118de2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Spoje-NET/ipex-b2b/zipball/98a6b8ca640a03dca24268a3b39b66fdea20aac9",
-                "reference": "98a6b8ca640a03dca24268a3b39b66fdea20aac9",
+                "url": "https://api.github.com/repos/Spoje-NET/ipex-b2b/zipball/1384ee663514358e10cdfa100f0423b662118de2",
+                "reference": "1384ee663514358e10cdfa100f0423b662118de2",
                 "shasum": ""
             },
             "require": {
@@ -858,7 +858,7 @@
                 "issues": "https://github.com/Spoje-NET/ipex-b2b/issues",
                 "source": "https://github.com/Spoje-NET/ipex-b2b/tree/main"
             },
-            "time": "2026-03-13T11:27:58+00:00"
+            "time": "2026-04-14T18:51:39+00:00"
         },
         {
             "name": "vitexsoftware/ease-core",
@@ -3109,12 +3109,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "cc53a9e1fcf88f55375ccd4d00cf4c91e461ec0d"
+                "reference": "0f59dfdd7a126a4c662a51eec775c2287aece5f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/cc53a9e1fcf88f55375ccd4d00cf4c91e461ec0d",
-                "reference": "cc53a9e1fcf88f55375ccd4d00cf4c91e461ec0d",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0f59dfdd7a126a4c662a51eec775c2287aece5f1",
+                "reference": "0f59dfdd7a126a4c662a51eec775c2287aece5f1",
                 "shasum": ""
             },
             "require": {
@@ -3193,7 +3193,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-04-14T15:07:44+00:00"
+            "time": "2026-04-15T05:08:48+00:00"
         },
         {
             "name": "psr/container",

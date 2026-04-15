@@ -729,7 +729,7 @@ class Ipex extends \Ease\Sand
             $order->setDataValue('ulice', $invoiceRaw['street']);
             $order->setDataValue('psc', $invoiceRaw['zipCode']);
             $order->setDataValue('mesto', $invoiceRaw['city']);
-            $order->setDataValue('datObj', $invoiceRaw['datetime']);
+            $order->setDataValue('datObj', isset($invoiceRaw['datetime']) ? $invoiceRaw['datetime'] : $startDate->format('Y-m-d'));
             $order->setDataValue(
                 'poznam',
                 'Ipex: '.$invoiceRaw['customerId'].' '.$invoiceRaw['note']
