@@ -1,6 +1,6 @@
-# WARP.md
+# AGENTS.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+This file provides guidance to AI coding agents (Claude Code, Copilot, Cursor, Warp, etc.) when working with code in this repository.
 
 ## Project Overview
 
@@ -115,3 +115,17 @@ Full Debian packaging support in `debian/` directory with:
 - Order confirmation emails to customers
 - Administrative notifications for processing results
 - PDF call reports attached to emails
+
+## Known Gotchas & Bug History
+
+### IPEX invoice data shape (`$invoiceRaw`)
+The array returned by the IPEX API for postpaid orders contains `dateStart` and `dateEnd`
+(ISO-8601 strings, e.g. `2026-02-28T23:00:00.000Z`) but **does not include a `datetime` key**.
+In `createOrder()` the field `datObj` (order date) must use the pre-parsed `$startDate` object:
+```php
+// Correct — $startDate is already constructed from $invoiceRaw['dateStart']
+$order->setDataValue('datObj', isset($invoiceRaw['datetime']) ? $invoiceRaw['datetime'] : $startDate->format('Y-m-d'));
+```
+Accessing `$invoiceRaw['datetime']` directly causes an undefined-key warning and a fatal
+AbraFlexi exception (`'null' must be a date`) for any customer not already in the address book.
+Fixed in commit `355b418`.
