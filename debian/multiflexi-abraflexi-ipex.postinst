@@ -12,5 +12,5 @@ done
 
 for file in `ls /usr/lib/$APPLICATION/multiflexi/*.crdprototype.json`
 do
-        multiflexi-cli crprototype import-json --file=$file
+        multiflexi-cli crprototype import-json --file $file
 done
