@@ -20,6 +20,8 @@ override_dh_install:
 	install -D -m 0644 debian/autoload.php debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	sed -i "1a defined('APP_NAME') || define('APP_NAME', '$(PKG_SOURCE)');" \
 		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
+	sed -i "s|: 'unknown'|: '$(PKG_SOURCE)'|" \\
+		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	sed -i "2a defined('APP_VERSION') || define('APP_VERSION', '$(PKG_VERSION)');" \
 		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	install -m0755 -d debian/abraflexi-ipex/usr/share/pkg-php-tools/autoloaders
