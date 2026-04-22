@@ -38,6 +38,8 @@ use Ease\Mailer;
  */
 class Ipex extends \Ease\Sand
 {
+    private const MAX_DUZP_ISSUE_GAP_DAYS = 14;
+
     public float $invoicingLimit = 50.0;
     public FakturaVydana $invoicer;
 
@@ -428,6 +430,7 @@ class Ipex extends \Ease\Sand
                 $customerCode = \AbraFlexi\Functions::uncode($customer);
                 $uninvoicedAmount = $this->uninvoicedAmount($calls);
                 $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode ?? $customer;
+                [$customerSince, $customerUntil] = $this->determineInvoicePeriod($calls);
 
                 $result[$customer] = [
                     'customerCode' => $customerCode,
@@ -461,8 +464,7 @@ class Ipex extends \Ease\Sand
                         // Check if amount meets threshold
                         if ($uninvoicedAmount > $this->invoicingLimit) {
                             // Check for duplicate invoice first
-                            if (isset($this->since, $this->until)
-                                && $this->invoiceExistsForPeriod($customer, $this->since, $this->until)) {
+                            if ($this->invoiceExistsForPeriod($customer, $customerSince, $customerUntil)) {
                                 ++$summary['duplicateCount'];
                                 $result[$customer]['status'] = 'duplicate';
                                 $result[$customer]['invoice'] = 'Already exists';
@@ -473,8 +475,7 @@ class Ipex extends \Ease\Sand
                                     'customerName' => $customerName,
                                     'amount' => $uninvoicedAmount,
                                     'orderCount' => \count($calls),
-                                    'period' => isset($this->since) && isset($this->until) ?
-                                        $this->since->format('Y-m-d').' to '.$this->until->format('Y-m-d') : 'Unknown',
+                                    'period' => $customerSince->format('Y-m-d').' to '.$customerUntil->format('Y-m-d'),
                                     'reason' => 'Duplicate invoice for period',
                                 ];
                             } else {
@@ -500,8 +501,7 @@ class Ipex extends \Ease\Sand
                                         'amount' => $invoiceAmount,
                                         'orderCount' => \count($calls),
                                         'orderCodes' => array_keys($calls),
-                                        'period' => isset($this->since) && isset($this->until) ?
-                                            $this->since->format('Y-m-d').' to '.$this->until->format('Y-m-d') : 'Unknown',
+                                        'period' => $customerSince->format('Y-m-d').' to '.$customerUntil->format('Y-m-d'),
                                         'invoiceUrl' => $invoice->getApiUrl(),
                                         'createdAt' => (new \DateTime())->format('Y-m-d H:i:s'),
                                     ];
@@ -637,6 +637,7 @@ class Ipex extends \Ease\Sand
 
         $orders = $this->getOrderer()->getColumnsFromAbraFlexi(
             [
+                'id',
                 'kod',
                 'mena',
                 'firma',
@@ -795,6 +796,144 @@ class Ipex extends \Ease\Sand
     public static function formatDate($dateTime)
     {
         return $dateTime->format('m. d. Y');
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $orders
+     *
+     * @return array{0:\DateTime,1:\DateTime}
+     */
+    private function determineInvoicePeriod(array $orders): array
+    {
+        $periodSince = null;
+        $periodUntil = null;
+
+        foreach ($orders as $orderData) {
+            if (!empty($orderData['polozkyDokladu'])) {
+                foreach ($orderData['polozkyDokladu'] as $orderItem) {
+                    if (!isset($orderItem['nazev']) || !\is_string($orderItem['nazev'])) {
+                        continue;
+                    }
+
+                    if (preg_match('/(?:od|from)\s+(\d{2}\.\s\d{2}\.\s\d{4}).*(?:do|to)\s+(\d{2}\.\s\d{2}\.\s\d{4})/u', $orderItem['nazev'], $matches) === 1) {
+                        $itemSince = \DateTime::createFromFormat('m. d. Y', trim($matches[1]));
+                        $itemUntil = \DateTime::createFromFormat('m. d. Y', trim($matches[2]));
+
+                        if ($itemSince instanceof \DateTime && ($periodSince === null || $itemSince < $periodSince)) {
+                            $periodSince = $itemSince;
+                        }
+
+                        if ($itemUntil instanceof \DateTime && ($periodUntil === null || $itemUntil > $periodUntil)) {
+                            $periodUntil = $itemUntil;
+                        }
+                    }
+                }
+            }
+
+            $orderDate = $this->toDateTime($orderData['datVyst'] ?? null);
+
+            if ($orderDate instanceof \DateTime) {
+                if ($periodSince === null || $orderDate < $periodSince) {
+                    $periodSince = clone $orderDate;
+                }
+
+                if ($periodUntil === null || $orderDate > $periodUntil) {
+                    $periodUntil = clone $orderDate;
+                }
+            }
+        }
+
+        if ($periodSince === null || $periodUntil === null) {
+            $today = new \DateTime('today');
+            $periodSince = clone $today;
+            $periodUntil = clone $today;
+        }
+
+        return [$periodSince, $periodUntil];
+    }
+
+    private function toDateTime(mixed $value): ?\DateTime
+    {
+        if ($value instanceof \DateTime) {
+            return clone $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return new \DateTime($value->format('Y-m-d H:i:s'));
+        }
+
+        if (\is_string($value) && $value !== '') {
+            return new \DateTime($value);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{0:\DateTime,1:\DateTime}
+     */
+    private function resolveInvoiceDates(\DateTime $periodUntil): array
+    {
+        $duzpDate = clone $periodUntil;
+        $duzpDate->modify('last day of this month');
+
+        $invoiceIssueDate = new \DateTime('today');
+        $latestAllowedIssueDate = clone $duzpDate;
+        $latestAllowedIssueDate->modify('+'.self::MAX_DUZP_ISSUE_GAP_DAYS.' days');
+
+        if ($invoiceIssueDate > $latestAllowedIssueDate) {
+            $invoiceIssueDate = $latestAllowedIssueDate;
+        }
+
+        if ($invoiceIssueDate < $duzpDate) {
+            $invoiceIssueDate = clone $duzpDate;
+        }
+
+        return [$invoiceIssueDate, $duzpDate];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $callsOrders
+     */
+    private function linkInvoiceToOrders(FakturaVydana $invoice, array $callsOrders): int
+    {
+        $linksPayload = [];
+
+        foreach ($callsOrders as $orderData) {
+            if (isset($orderData['id']) === false) {
+                continue;
+            }
+
+            $linksPayload[] = [
+                'idDokl' => (int) $orderData['id'],
+                'typVazbyK' => 'typVazbyDokl.obchod_faktura_hla',
+            ];
+        }
+
+        if (empty($linksPayload)) {
+            return 0;
+        }
+
+        $linkResult = $invoice->insertToAbraFlexi([
+            'id' => $invoice,
+            'vazebni-doklady' => $linksPayload,
+        ]);
+
+        if ($linkResult === false || $invoice->lastResponseCode >= 300) {
+            $invoice->addStatusMessage(
+                'Unable to create native order links, keeping fallback note with order codes',
+                'warning',
+            );
+
+            $invoice->insertToAbraFlexi([
+                'id' => $invoice,
+                'poznam' => trim((string) $invoice->getDataValue('poznam')."\nOrders: ".implode(', ', array_keys($callsOrders))),
+            ]);
+
+            return 0;
+        }
+
+        return \count($linksPayload);
     }
 
     /**
@@ -968,11 +1107,12 @@ class Ipex extends \Ease\Sand
     {
         $firstOrder = current($callsOrders);
         $customerExtId = (string) $firstOrder['firma'];
+        [$periodSince, $periodUntil] = $this->determineInvoicePeriod($callsOrders);
 
         // Check if invoice already exists for this customer and period
-        if (isset($this->since, $this->until) && $this->invoiceExistsForPeriod($customerExtId, $this->since, $this->until)) {
+        if ($this->invoiceExistsForPeriod($customerExtId, $periodSince, $periodUntil)) {
             $this->addStatusMessage(
-                $this->counter.$customerExtId.' - Invoice already exists for period '.self::formatDate($this->since).' - '.self::formatDate($this->until),
+                $this->counter.$customerExtId.' - Invoice already exists for period '.self::formatDate($periodSince).' - '.self::formatDate($periodUntil),
                 'info',
             );
 
@@ -987,15 +1127,10 @@ class Ipex extends \Ease\Sand
         $invoice->setDataValue('firma', \AbraFlexi\Code::ensure($customerExtId));
         $invoice->setDataValue('typUcOp', \AbraFlexi\Code::ensure('TRŽBA SLUŽBY INT'));
 
+        $this->since = clone $periodSince;
+        $this->until = clone $periodUntil;
+
         foreach ($callsOrders as $orderCode => $orderData) {
-            if (isset($this->since) === false || $this->since > $orderData['datVyst']) {
-                $this->since = $orderData['datVyst'];
-            }
-
-            if (isset($this->until) === false || $this->until < $orderData['datVyst']) {
-                $this->until = $orderData['datVyst'];
-            }
-
             if (!empty($orderData['polozkyDokladu'])) {
                 foreach ($orderData['polozkyDokladu'] as $orderItem) {
                     if ($orderItem['kod'] === \AbraFlexi\Code::strip(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID'))) {
@@ -1013,23 +1148,16 @@ class Ipex extends \Ease\Sand
             }
         }
 
-        if (isset($this->since)) {
-            $startDate = clone $this->since;
-            $startDate->modify(' -'.\count($callsOrders).' month')->modify('first day of next month');
-        }
+        [$invoiceIssueDate, $duzpDate] = $this->resolveInvoiceDates($periodUntil);
 
         $invoice->setDataValue(
             'popis',
-            isset($this->since, $this->until) ?
-                'Telefonní služby '._('from').' '.self::formatDate($this->since).' '._('to').' '.self::formatDate($this->until) :
-                'Telefonní služby',
+            'Telefonní služby '._('from').' '.self::formatDate($periodSince).' '._('to').' '.self::formatDate($periodUntil),
         );
 
         $invoice->setDataValue('uvodTxt', 'Fakturujeme Vám hlasové služby');
-
-        if (isset($this->until)) {
-            $invoice->setDataValue('duzpPuv', \AbraFlexi\Date::fromDateTime($this->until));
-        }
+        $invoice->setDataValue('datVyst', \AbraFlexi\Date::fromDateTime($invoiceIssueDate));
+        $invoice->setDataValue('duzpPuv', \AbraFlexi\Date::fromDateTime($duzpDate));
 
         if ($invoice->sync()) {
             $invoice->addStatusMessage(
@@ -1037,9 +1165,20 @@ class Ipex extends \Ease\Sand
                 'success',
             );
 
-            $ipexCustomerID = (int) $this->ipexUsers[$this->getDataValue('firma')]['id'];
+            $linkedOrders = $this->linkInvoiceToOrders($invoice, $callsOrders);
 
-            \AbraFlexi\Priloha::addAttachmentFromFile($invoice, $this->savePdfCallLog($ipexCustomerID, $invoice->getDataValue('firma')->showAs, \count($callsOrders)));
+            if ($linkedOrders === 0) {
+                $invoice->addStatusMessage(
+                    $this->counter.$customerExtId.' - No order links were created for invoice',
+                    'warning',
+                );
+            }
+
+            $ipexCustomerID = (int) ($this->ipexUsers[$customerExtId]['id'] ?? 0);
+
+            if ($ipexCustomerID > 0) {
+                \AbraFlexi\Priloha::addAttachmentFromFile($invoice, $this->savePdfCallLog($ipexCustomerID, $invoice->getDataValue('firma')->showAs, \count($callsOrders)));
+            }
 
             $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
 
