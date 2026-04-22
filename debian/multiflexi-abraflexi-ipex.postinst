@@ -7,10 +7,10 @@ set -e
 APPLICATION=`echo $DPKG_MAINTSCRIPT_PACKAGE | sed 's/multiflexi-//'`
 for file in `ls /usr/lib/$APPLICATION/multiflexi/*.app.json`
 do
-	multiflexi-cli application import-json --file $file
+	multiflexi-cli application:import-json --file $file
 done
 
 for file in `ls /usr/lib/$APPLICATION/multiflexi/*.crdprototype.json`
 do
-        multiflexi-cli crprototype import-json --file $file
+        multiflexi-cli credential-prototype:import-json --file $file
 done
