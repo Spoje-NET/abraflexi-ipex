@@ -38,7 +38,7 @@ $destination = \array_key_exists('output', $options) ? $options['output'] : Shar
 $ipexer = new \SpojeNet\AbraFlexiIpex\Ipex();
 
 if (Shared::cfg('APP_DEBUG', false)) {
-    $ipexer->logBanner();
+    $ipexer->logBanner(Shared::appName().' '.Shared::appVersion(), sprintf(_('php-abraflexi: %s, php-ipex: %s '), \Composer\InstalledVersions::getPrettyVersion('spojenet/flexibee'), \Composer\InstalledVersions::getPrettyVersion('spojenet/ipexb2b')));
 }
 
 $report = $ipexer->processIpexPostpaidInvoices();

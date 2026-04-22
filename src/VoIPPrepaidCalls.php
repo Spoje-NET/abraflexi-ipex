@@ -39,7 +39,7 @@ $exitcode = 0;
 $grabber = new \IPEXB2B\ApiClient('', ['section' => 'invoices']);
 
 if (Shared::cfg('APP_DEBUG', false)) {
-    $grabber->logBanner();
+    $grabber->logBanner(Shared::appName().' '.Shared::appVersion(), sprintf(_('php-abraflexi: %s, php-ipex: %s '), \Composer\InstalledVersions::getPrettyVersion('spojenet/flexibee'), \Composer\InstalledVersions::getPrettyVersion('spojenet/ipexb2b')));
 }
 
 // Get monthOffset from environment variable or default to -1
@@ -107,15 +107,13 @@ foreach ($invoicesRaw as $invoiceRaw) {
 
             $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
 
-            if ($sendByEmail) {
-                $postman = new Mailer(
-                    $email,
-                    _('Prepaid Calls listing').' '.$range,
-                    _('Prepaid Calls for last month'),
-                );
-                $postman->addFile($pdfFilename, 'application/pdf');
-                $mailSent = $postman->send();
-            }
+            $postman = new Mailer(
+                $email,
+                _('Prepaid Calls listing').' '.$range,
+                _('Prepaid Calls for last month'),
+            );
+            $postman->addFile($pdfFilename, 'application/pdf');
+            $mailSent = $postman->send();
 
             unlink($pdfFilename);
         } else {

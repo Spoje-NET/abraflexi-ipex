@@ -36,7 +36,7 @@ new \Ease\Locale(Shared::cfg('IPEX_LOCALIZE'), '../i18n', 'abraflexi-ipex');
 $labeler = new Stitek();
 
 if (Shared::cfg('APP_DEBUG')) {
-    $labeler->logBanner();
+    $labeler->logBanner(Shared::appName().' '.Shared::appVersion(), sprintf(_('php-abraflexi: %s, php-ipex: %s '), \Composer\InstalledVersions::getPrettyVersion('spojenet/flexibee'), \Composer\InstalledVersions::getPrettyVersion('spojenet/ipexb2b')));
 }
 
 // ABRAFLEXI_ORDERTYPE=code:OBP_VOIP
@@ -45,5 +45,4 @@ if (Shared::cfg('APP_DEBUG')) {
 
 // $pricer = new \AbraFlexi\
 
-
-//Todo: Create invoice label: API_IPEX
+// Todo: Create invoice label: API_IPEX

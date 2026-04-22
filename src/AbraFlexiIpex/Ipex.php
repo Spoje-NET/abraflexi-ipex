@@ -39,7 +39,6 @@ use Ease\Mailer;
 class Ipex extends \Ease\Sand
 {
     private const MAX_DUZP_ISSUE_GAP_DAYS = 14;
-
     public float $invoicingLimit = 50.0;
     public FakturaVydana $invoicer;
 
@@ -430,7 +429,7 @@ class Ipex extends \Ease\Sand
                 $customerCode = \AbraFlexi\Code::strip($customer);
                 $uninvoicedAmount = $this->uninvoicedAmount($calls);
                 $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode ?? $customer;
-                [$customerSince, $customerUntil] = $this->determineInvoicePeriod($calls);
+                [$customerSince, $customerUntil] = self::determineInvoicePeriod($calls);
 
                 $result[$customer] = [
                     'customerCode' => $customerCode,
@@ -734,7 +733,7 @@ class Ipex extends \Ease\Sand
             $order->setDataValue('ulice', $invoiceRaw['street']);
             $order->setDataValue('psc', $invoiceRaw['zipCode']);
             $order->setDataValue('mesto', $invoiceRaw['city']);
-            $order->setDataValue('datObj', isset($invoiceRaw['datetime']) ? $invoiceRaw['datetime'] : $startDate->format('Y-m-d'));
+            $order->setDataValue('datObj', $invoiceRaw['datetime'] ?? $startDate->format('Y-m-d'));
             $order->setDataValue(
                 'poznam',
                 'Ipex: '.$invoiceRaw['customerId'].' '.$invoiceRaw['note']
@@ -748,8 +747,8 @@ class Ipex extends \Ease\Sand
             'cenik' => \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
             'stitky' => 'API_IPEX',
         ];
-        $orderSince = $this->toDateTime($order->getDataValue('datTermin')) ?? clone $startDate;
-        $orderUntil = $this->toDateTime($order->getDataValue('datReal')) ?? clone $endDate;
+        $orderSince = self::toDateTime($order->getDataValue('datTermin')) ?? clone $startDate;
+        $orderUntil = self::toDateTime($order->getDataValue('datReal')) ?? clone $endDate;
         $order->setDataValue('popis', 'Telefonní služby od '.self::formatDate($orderSince).' do '.self::formatDate($orderUntil));
 
         if (strtolower(\Ease\Shared::cfg('ABRAFLEXI_CREATE_EMPTY_ORDERS', 'true')) === 'true' || (float) $invoiceRaw['price']) {
@@ -805,134 +804,6 @@ class Ipex extends \Ease\Sand
     }
 
     /**
-     * @param array<string, array<string, mixed>> $orders
-     *
-     * @return array{0:\DateTime,1:\DateTime}
-     */
-    private function determineInvoicePeriod(array $orders): array
-    {
-        $periodSince = null;
-        $periodUntil = null;
-
-        foreach ($orders as $orderData) {
-            $orderSince = $this->toDateTime($orderData['datTermin'] ?? null);
-            $orderUntil = $this->toDateTime($orderData['datReal'] ?? null);
-
-            if ($orderSince instanceof \DateTime && ($periodSince === null || $orderSince < $periodSince)) {
-                $periodSince = $orderSince;
-            }
-
-            if ($orderUntil instanceof \DateTime && ($periodUntil === null || $orderUntil > $periodUntil)) {
-                $periodUntil = $orderUntil;
-            }
-
-            $orderDate = $this->toDateTime($orderData['datVyst'] ?? null);
-
-            if ($orderDate instanceof \DateTime) {
-                if ($periodSince === null || $orderDate < $periodSince) {
-                    $periodSince = clone $orderDate;
-                }
-
-                if ($periodUntil === null || $orderDate > $periodUntil) {
-                    $periodUntil = clone $orderDate;
-                }
-            }
-        }
-
-        if ($periodSince === null || $periodUntil === null) {
-            $today = new \DateTime('today');
-            $periodSince = clone $today;
-            $periodUntil = clone $today;
-        }
-
-        return [$periodSince, $periodUntil];
-    }
-
-    private function toDateTime(mixed $value): ?\DateTime
-    {
-        if ($value instanceof \DateTime) {
-            return clone $value;
-        }
-
-        if ($value instanceof \DateTimeInterface) {
-            return new \DateTime($value->format('Y-m-d H:i:s'));
-        }
-
-        if (\is_string($value) && $value !== '') {
-            return new \DateTime($value);
-        }
-
-        return null;
-    }
-
-    /**
-     * @return array{0:\DateTime,1:\DateTime}
-     */
-    private function resolveInvoiceDates(\DateTime $periodUntil): array
-    {
-        $duzpDate = clone $periodUntil;
-        $duzpDate->modify('last day of this month');
-
-        $invoiceIssueDate = new \DateTime('today');
-        $latestAllowedIssueDate = clone $duzpDate;
-        $latestAllowedIssueDate->modify('+'.self::MAX_DUZP_ISSUE_GAP_DAYS.' days');
-
-        if ($invoiceIssueDate > $latestAllowedIssueDate) {
-            $invoiceIssueDate = $latestAllowedIssueDate;
-        }
-
-        if ($invoiceIssueDate < $duzpDate) {
-            $invoiceIssueDate = clone $duzpDate;
-        }
-
-        return [$invoiceIssueDate, $duzpDate];
-    }
-
-    /**
-     * @param array<string, array<string, mixed>> $callsOrders
-     */
-    private function linkInvoiceToOrders(FakturaVydana $invoice, array $callsOrders): int
-    {
-        $linksPayload = [];
-
-        foreach ($callsOrders as $orderData) {
-            if (isset($orderData['id']) === false) {
-                continue;
-            }
-
-            $linksPayload[] = [
-                'idDokl' => (int) $orderData['id'],
-                'typVazbyK' => 'typVazbyDokl.obchod_faktura_hla',
-            ];
-        }
-
-        if (empty($linksPayload)) {
-            return 0;
-        }
-
-        $linkResult = $invoice->insertToAbraFlexi([
-            'id' => $invoice,
-            'vazebni-doklady' => $linksPayload,
-        ]);
-
-        if ($linkResult === false || $invoice->lastResponseCode >= 300) {
-            $invoice->addStatusMessage(
-                'Unable to create native order links, keeping fallback note with order codes',
-                'warning',
-            );
-
-            $invoice->insertToAbraFlexi([
-                'id' => $invoice,
-                'poznam' => trim((string) $invoice->getDataValue('poznam')."\nOrders: ".implode(', ', array_keys($callsOrders))),
-            ]);
-
-            return 0;
-        }
-
-        return \count($linksPayload);
-    }
-
-    /**
      * Gives you call log as PDF.
      *
      * @param int    $ipexCustomerID internal IPEX id
@@ -959,9 +830,7 @@ class Ipex extends \Ease\Sand
         $calls = $caller->getCallsForCustomer($startDate, $ipexCustomerID);
 
         $report = new \Ease\Container(new \Ease\Html\H2Tag(_('Calls listing')));
-        $report->addItem(new \Ease\Html\PTag(
-            self::formatDate($startDate).' - '.self::formatDate($endDate),
-        ));
+        $report->addItem(new \Ease\Html\PTag(self::formatDate($startDate).' - '.self::formatDate($endDate)));
         $report->addItem(new CallsListing(
             $calls,
             ['style' => 'font-size: small'],
@@ -1103,7 +972,7 @@ class Ipex extends \Ease\Sand
     {
         $firstOrder = current($callsOrders);
         $customerExtId = (string) $firstOrder['firma'];
-        [$periodSince, $periodUntil] = $this->determineInvoicePeriod($callsOrders);
+        [$periodSince, $periodUntil] = self::determineInvoicePeriod($callsOrders);
 
         // Check if invoice already exists for this customer and period
         if ($this->invoiceExistsForPeriod($customerExtId, $periodSince, $periodUntil)) {
@@ -1144,7 +1013,7 @@ class Ipex extends \Ease\Sand
             }
         }
 
-        [$invoiceIssueDate, $duzpDate] = $this->resolveInvoiceDates($periodUntil);
+        [$invoiceIssueDate, $duzpDate] = self::resolveInvoiceDates($periodUntil);
 
         $invoice->setDataValue(
             'popis',
@@ -1161,7 +1030,7 @@ class Ipex extends \Ease\Sand
                 'success',
             );
 
-            $linkedOrders = $this->linkInvoiceToOrders($invoice, $callsOrders);
+            $linkedOrders = self::linkInvoiceToOrders($invoice, $callsOrders);
 
             if ($linkedOrders === 0) {
                 $invoice->addStatusMessage(
@@ -1422,5 +1291,133 @@ class Ipex extends \Ease\Sand
             'artifacts' => $artifacts,
             'metrics' => $metrics,
         ];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $orders
+     *
+     * @return array{0:\DateTime, 1:\DateTime}
+     */
+    private static function determineInvoicePeriod(array $orders): array
+    {
+        $periodSince = null;
+        $periodUntil = null;
+
+        foreach ($orders as $orderData) {
+            $orderSince = self::toDateTime($orderData['datTermin'] ?? null);
+            $orderUntil = self::toDateTime($orderData['datReal'] ?? null);
+
+            if ($orderSince instanceof \DateTime && ($periodSince === null || $orderSince < $periodSince)) {
+                $periodSince = $orderSince;
+            }
+
+            if ($orderUntil instanceof \DateTime && ($periodUntil === null || $orderUntil > $periodUntil)) {
+                $periodUntil = $orderUntil;
+            }
+
+            $orderDate = self::toDateTime($orderData['datVyst'] ?? null);
+
+            if ($orderDate instanceof \DateTime) {
+                if ($periodSince === null || $orderDate < $periodSince) {
+                    $periodSince = clone $orderDate;
+                }
+
+                if ($periodUntil === null || $orderDate > $periodUntil) {
+                    $periodUntil = clone $orderDate;
+                }
+            }
+        }
+
+        if ($periodSince === null || $periodUntil === null) {
+            $today = new \DateTime('today');
+            $periodSince = clone $today;
+            $periodUntil = clone $today;
+        }
+
+        return [$periodSince, $periodUntil];
+    }
+
+    private static function toDateTime(mixed $value): ?\DateTime
+    {
+        if ($value instanceof \DateTime) {
+            return clone $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return new \DateTime($value->format('Y-m-d H:i:s'));
+        }
+
+        if (\is_string($value) && $value !== '') {
+            return new \DateTime($value);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{0:\DateTime, 1:\DateTime}
+     */
+    private static function resolveInvoiceDates(\DateTime $periodUntil): array
+    {
+        $duzpDate = clone $periodUntil;
+        $duzpDate->modify('last day of this month');
+
+        $invoiceIssueDate = new \DateTime('today');
+        $latestAllowedIssueDate = clone $duzpDate;
+        $latestAllowedIssueDate->modify('+'.self::MAX_DUZP_ISSUE_GAP_DAYS.' days');
+
+        if ($invoiceIssueDate > $latestAllowedIssueDate) {
+            $invoiceIssueDate = $latestAllowedIssueDate;
+        }
+
+        if ($invoiceIssueDate < $duzpDate) {
+            $invoiceIssueDate = clone $duzpDate;
+        }
+
+        return [$invoiceIssueDate, $duzpDate];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $callsOrders
+     */
+    private static function linkInvoiceToOrders(FakturaVydana $invoice, array $callsOrders): int
+    {
+        $linksPayload = [];
+
+        foreach ($callsOrders as $orderData) {
+            if (isset($orderData['id']) === false) {
+                continue;
+            }
+
+            $linksPayload[] = [
+                'idDokl' => (int) $orderData['id'],
+                'typVazbyK' => 'typVazbyDokl.obchod_faktura_hla',
+            ];
+        }
+
+        if (empty($linksPayload)) {
+            return 0;
+        }
+
+        $linkResult = $invoice->insertToAbraFlexi([
+            'id' => $invoice,
+            'vazebni-doklady' => $linksPayload,
+        ]);
+
+        if ($linkResult === false || $invoice->lastResponseCode >= 300) {
+            $invoice->addStatusMessage(
+                'Unable to create native order links, keeping fallback note with order codes',
+                'warning',
+            );
+
+            $invoice->insertToAbraFlexi([
+                'id' => $invoice,
+                'poznam' => trim((string) $invoice->getDataValue('poznam')."\nOrders: ".implode(', ', array_keys($callsOrders))),
+            ]);
+
+            return 0;
+        }
+
+        return \count($linksPayload);
     }
 }
