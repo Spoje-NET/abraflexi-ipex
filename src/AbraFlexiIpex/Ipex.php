@@ -1365,8 +1365,18 @@ class Ipex extends \Ease\Sand
             return new \DateTime($value->format('Y-m-d H:i:s'));
         }
 
-        if (\is_string($value) && $value !== '') {
-            return new \DateTime($value);
+        if (\is_string($value)) {
+            $normalized = trim($value);
+
+            if ($normalized === '') {
+                return null;
+            }
+
+            try {
+                return new \DateTime($normalized);
+            } catch (\Exception) {
+                return null;
+            }
         }
 
         return null;
