@@ -741,14 +741,14 @@ class Ipex extends \Ease\Sand
             );
         }
 
+        $orderSince = self::toDateTime($order->getDataValue('datTermin')) ?? clone $startDate;
+        $orderUntil = self::toDateTime($order->getDataValue('datReal')) ?? clone $endDate;
         $pricelistItem = [
             'cenaMj' => $invoiceRaw['price'],
-            'nazev' => 'Telefonní služby od '.self::formatDate($startDate).' do '.self::formatDate($endDate),
+            'nazev' => 'Telefonní služby od '.self::formatDate($orderSince).' do '.self::formatDate($orderUntil),
             'cenik' => \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
             'stitky' => 'API_IPEX',
         ];
-        $orderSince = self::toDateTime($order->getDataValue('datTermin')) ?? clone $startDate;
-        $orderUntil = self::toDateTime($order->getDataValue('datReal')) ?? clone $endDate;
         $order->setDataValue('popis', 'Telefonní služby od '.self::formatDate($orderSince).' do '.self::formatDate($orderUntil));
 
         if (strtolower(\Ease\Shared::cfg('ABRAFLEXI_CREATE_EMPTY_ORDERS', 'true')) === 'true' || (float) $invoiceRaw['price']) {
