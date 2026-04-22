@@ -38,6 +38,17 @@ Aby se nevystavovaly zbytečně malé faktury, integrace používá konfigurovat
 - Pokud kód zákazníka (podřetězcově) figuruje v `ABRAFLEXI_SKIPLIST`, fakturace se přeskočí bez ohledu na částku.
 - `ABRAFLEXI_CREATE_EMPTY_ORDERS` umožní evidenčně vytvořit i nulové objednávky (např. pro přiložení výpisu hovorů a sledování zpracování měsíce).
 
+### Přesný mechanismus pro 0 Kč objednávky
+
+1. Pokud je `ABRAFLEXI_CREATE_EMPTY_ORDERS=true`, vytvoří se objednávka i za měsíc, kde je cena `0 Kč`.
+2. Tato objednávka je ve stavu `stavDoklObch.pripraveno` stejně jako ostatní měsíce.
+3. Fakturace se spouští nad součtem `sumCelkem` všech připravených objednávek zákazníka.
+4. Dokud součet nepřekročí `ABRAFLEXI_MINIMAL_INVOICING`, faktura nevznikne a objednávky (včetně 0 Kč) zůstávají připravené.
+5. Jakmile součet limit překročí, do jedné faktury se přenesou všechny relevantní připravené objednávky zákazníka, tedy i měsíce s `0 Kč`.
+6. Po vytvoření faktury se zdrojové objednávky označí jako `stavDoklObch.hotovo`.
+
+Poznámka: Pokud je `ABRAFLEXI_CREATE_EMPTY_ORDERS=false`, 0 Kč objednávky se nevytvářejí, a tedy se do budoucí faktury nemají odkud přenést.
+
 ### Používané proměnné prostředí
 
 #### Základní konfigurace
@@ -85,6 +96,7 @@ Aby se nevystavovaly zbytečně malé faktury, integrace používá konfigurovat
 3. Seskupí se podle zákazníka a sečte se `sumCelkem`.
 4. Pokud součet > limit → vytvoří se faktura, připojí výpis hovorů, objednávky se označí jako hotové.
 5. Jinak objednávky zůstávají připravené pro pozdější navýšení.
+6. To zahrnuje i nulové objednávky: pokud byly vytvořeny, přenesou se do faktury v okamžiku pozdějšího překročení limitu.
 
 ---
 

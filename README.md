@@ -92,6 +92,17 @@ The [.env](.env.example) file contains the necessary configuration for the integ
 - `SEND_CALL_LIST_EMAIL`: Send the call list PDF to the customer by email (default: `true`)
 - `MULTIFLEXI_JOB_ID`: When set, appends the MultiFlexi job ID to order notes for traceability
 
+### Exact Mechanism for Zero-Amount Orders
+
+1. When `ABRAFLEXI_CREATE_EMPTY_ORDERS=true`, an order is created even for months with `0 CZK` amount.
+2. That order stays in `stavDoklObch.pripraveno` like other monthly orders.
+3. Invoicing is evaluated against the sum of `sumCelkem` from all prepared customer orders.
+4. Until the sum exceeds `ABRAFLEXI_MINIMAL_INVOICING`, no invoice is created and all orders (including zero-amount ones) remain prepared.
+5. Once the threshold is exceeded, the resulting invoice is built from the prepared orders for that customer, including months that had `0 CZK` orders.
+6. After invoice creation, source orders are marked as `stavDoklObch.hotovo`.
+
+Note: If `ABRAFLEXI_CREATE_EMPTY_ORDERS=false`, zero-amount orders are not created, so they cannot be included in a future invoice.
+
 ## Usage
 
 To use the `abraflexi-ipex` integration, run the following commands:
