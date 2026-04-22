@@ -644,6 +644,8 @@ class Ipex extends \Ease\Sand
                 'zamekK',
                 'smerKod',
                 'datVyst',
+                'datTermin',
+                'datReal',
                 'specSym',
                 'sumCelkem',
                 'sumCelkemMen',
@@ -720,6 +722,8 @@ class Ipex extends \Ease\Sand
             'zaokrNaSumK' => 'zaokrNa.zadne',
             'zaokrNaDphK' => 'zaokrNa.zadne',
             'datVyst' => isset($this->since) ? $this->since->format('Y-m-d') : $startDate->format('Y-m-d'), // Set order date to beginning of target month
+            'datTermin' => $startDate->format('Y-m-d'),
+            'datReal' => $endDate->format('Y-m-d'),
             'popis' => _('IPEX Postpaid'),
         ]);
 
@@ -744,7 +748,9 @@ class Ipex extends \Ease\Sand
             'cenik' => \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_PRODUCT', 'IPEX_POSTPAID')),
             'stitky' => 'API_IPEX',
         ];
-        $order->setDataValue('popis', $pricelistItem['nazev']);
+        $orderSince = $this->toDateTime($order->getDataValue('datTermin')) ?? clone $startDate;
+        $orderUntil = $this->toDateTime($order->getDataValue('datReal')) ?? clone $endDate;
+        $order->setDataValue('popis', 'Telefonní služby od '.self::formatDate($orderSince).' do '.self::formatDate($orderUntil));
 
         if (strtolower(\Ease\Shared::cfg('ABRAFLEXI_CREATE_EMPTY_ORDERS', 'true')) === 'true' || (float) $invoiceRaw['price']) {
             $order->addArrayToBranch($pricelistItem, 'polozkyDokladu');
@@ -809,25 +815,15 @@ class Ipex extends \Ease\Sand
         $periodUntil = null;
 
         foreach ($orders as $orderData) {
-            if (!empty($orderData['polozkyDokladu'])) {
-                foreach ($orderData['polozkyDokladu'] as $orderItem) {
-                    if (!isset($orderItem['nazev']) || !\is_string($orderItem['nazev'])) {
-                        continue;
-                    }
+            $orderSince = $this->toDateTime($orderData['datTermin'] ?? null);
+            $orderUntil = $this->toDateTime($orderData['datReal'] ?? null);
 
-                    if (preg_match('/(?:od|from)\s+(\d{2}\.\s\d{2}\.\s\d{4}).*(?:do|to)\s+(\d{2}\.\s\d{2}\.\s\d{4})/u', $orderItem['nazev'], $matches) === 1) {
-                        $itemSince = \DateTime::createFromFormat('m. d. Y', trim($matches[1]));
-                        $itemUntil = \DateTime::createFromFormat('m. d. Y', trim($matches[2]));
+            if ($orderSince instanceof \DateTime && ($periodSince === null || $orderSince < $periodSince)) {
+                $periodSince = $orderSince;
+            }
 
-                        if ($itemSince instanceof \DateTime && ($periodSince === null || $itemSince < $periodSince)) {
-                            $periodSince = $itemSince;
-                        }
-
-                        if ($itemUntil instanceof \DateTime && ($periodUntil === null || $itemUntil > $periodUntil)) {
-                            $periodUntil = $itemUntil;
-                        }
-                    }
-                }
+            if ($orderUntil instanceof \DateTime && ($periodUntil === null || $orderUntil > $periodUntil)) {
+                $periodUntil = $orderUntil;
             }
 
             $orderDate = $this->toDateTime($orderData['datVyst'] ?? null);
