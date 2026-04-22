@@ -427,7 +427,7 @@ class Ipex extends \Ease\Sand
 
             foreach ($callsByCustomer as $customer => $calls) {
                 ++$summary['processedCount'];
-                $customerCode = \AbraFlexi\Functions::uncode($customer);
+                $customerCode = \AbraFlexi\Code::strip($customer);
                 $uninvoicedAmount = $this->uninvoicedAmount($calls);
                 $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode ?? $customer;
                 [$customerSince, $customerUntil] = $this->determineInvoicePeriod($calls);

@@ -19,7 +19,7 @@ use Ease\Shared;
 /**
  * abraflexi-ipex.
  *
- * @copyright (c) 2025, Vítězslav Dvořák
+ * @copyright (c) 2025-2026, SpojeNet s.r.o.
  */
 \define('APP_NAME', 'AbraFlexiIpexInit');
 
@@ -32,7 +32,7 @@ Shared::init(
     ],
     \array_key_exists('environment', $options) ? $options['environment'] : (\array_key_exists('e', $options) ? $options['e'] : '../.env'),
 );
-new \Ease\Locale(Shared::cfg('MATCHER_LOCALIZE'), '../i18n', 'abraflexi-matcher');
+new \Ease\Locale(Shared::cfg('IPEX_LOCALIZE'), '../i18n', 'abraflexi-ipex');
 $labeler = new Stitek();
 
 if (Shared::cfg('APP_DEBUG')) {
@@ -44,3 +44,6 @@ if (Shared::cfg('APP_DEBUG')) {
 // ABRAFLEXI_DOCTYPE=code:FAKTURA
 
 // $pricer = new \AbraFlexi\
+
+
+//Todo: Create invoice label: API_IPEX
