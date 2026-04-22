@@ -132,9 +132,8 @@ class Ipex extends \Ease\Sand
             foreach ($existingOrders as $order) {
                 $popis = $order['popis'] ?? '';
 
-                // Check if description contains dates that match our target period
-                if (strpos($popis, self::formatDate($startDate)) !== false
-                    && strpos($popis, self::formatDate($endDate)) !== false) {
+                // Keep backward compatibility with legacy MM.DD.YYYY records.
+                if (self::periodDescriptionMatches($popis, $startDate, $endDate)) {
                     return true;
                 }
             }
@@ -177,9 +176,8 @@ class Ipex extends \Ease\Sand
             foreach ($existingInvoices as $invoice) {
                 $popis = $invoice['popis'] ?? '';
 
-                // Check if description contains dates that match our target period
-                if (strpos($popis, self::formatDate($startDate)) !== false
-                    && strpos($popis, self::formatDate($endDate)) !== false) {
+                // Keep backward compatibility with legacy MM.DD.YYYY records.
+                if (self::periodDescriptionMatches($popis, $startDate, $endDate)) {
                     return true;
                 }
             }
@@ -800,7 +798,27 @@ class Ipex extends \Ease\Sand
 
     public static function formatDate($dateTime)
     {
+        return $dateTime->format('d.m.Y');
+    }
+
+    public static function formatDateLegacy($dateTime)
+    {
         return $dateTime->format('m. d. Y');
+    }
+
+    public static function periodDescriptionMatches(string $description, \DateTime $startDate, \DateTime $endDate): bool
+    {
+        $newStart = self::formatDate($startDate);
+        $newEnd = self::formatDate($endDate);
+
+        if (strpos($description, $newStart) !== false && strpos($description, $newEnd) !== false) {
+            return true;
+        }
+
+        $legacyStart = self::formatDateLegacy($startDate);
+        $legacyEnd = self::formatDateLegacy($endDate);
+
+        return strpos($description, $legacyStart) !== false && strpos($description, $legacyEnd) !== false;
     }
 
     /**

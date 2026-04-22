@@ -92,6 +92,13 @@ The [.env](.env.example) file contains the necessary configuration for the integ
 - `SEND_CALL_LIST_EMAIL`: Send the call list PDF to the customer by email (default: `true`)
 - `MULTIFLEXI_JOB_ID`: When set, appends the MultiFlexi job ID to order notes for traceability
 
+### IPEX Midnight Boundary Behavior
+
+1. IPEX billing periods can start at the last day of a month at `00:00`.
+2. Typical API example: `31.12.2025 00:00`.
+3. For monthly processing in this integration, this timestamp is treated as the next day boundary, i.e. `1.1.2026`.
+4. Therefore, during order generation, `datTermin` is stored as `dateStart + 1 day` to avoid off-by-one-day period shifts when querying from `00:00`.
+
 ### Exact Mechanism for Zero-Amount Orders
 
 1. When `ABRAFLEXI_CREATE_EMPTY_ORDERS=true`, an order is created even for months with `0 CZK` amount.

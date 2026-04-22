@@ -72,6 +72,13 @@ Poznámka: Pokud je `ABRAFLEXI_CREATE_EMPTY_ORDERS=false`, 0 Kč objednávky se 
 
 - `MONTH_OFFSET` – posun měsíce pro zpracování (záporné hodnoty pro minulé měsíce, např. -1 pro minulý měsíc)
 
+#### Hraniční čas z IPEX API
+
+- IPEX účtuje období od hraničního času posledního dne měsíce `00:00`.
+- Typický příklad z API: `31.12.2025 00:00`.
+- Pro účely našeho měsíčního zpracování je tento okamžik interpretován jako začátek následujícího dne, tj. `1.1.2026`.
+- Proto je při generování objednávek hodnota `datTermin` ukládána jako `dateStart + 1 den`, aby nedocházelo k posunu období při dotazech od `00:00`.
+
 #### Výstup
 
 - `RESULT_FILE` – cesta k souboru pro uložení výsledků zpracování
