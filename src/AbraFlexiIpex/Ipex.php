@@ -721,7 +721,7 @@ class Ipex extends \Ease\Sand
             'zaokrNaSumK' => 'zaokrNa.zadne',
             'zaokrNaDphK' => 'zaokrNa.zadne',
             'datVyst' => isset($this->since) ? $this->since->format('Y-m-d') : $startDate->format('Y-m-d'), // Set order date to beginning of target month
-            'datTermin' => $startDate->format('Y-m-d'),
+            'datTermin' => (clone $startDate)->modify('+1 day')->format('Y-m-d'),
             'datReal' => $endDate->format('Y-m-d'),
             'popis' => _('IPEX Postpaid'),
         ]);
