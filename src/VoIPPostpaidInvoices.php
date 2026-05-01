@@ -17,8 +17,10 @@ namespace SpojeNet\AbraFlexiIpex;
 
 use Ease\Shared;
 
+\define('APP_NAME', 'IPEXPostPaidInvoices');
+
 require_once '../vendor/autoload.php';
-\define('EASE_APPNAME', 'IPEXPostPaidInvoices');
+
 $exitcode = 0;
 /**
  * Get today's Statements list.

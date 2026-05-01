@@ -18,9 +18,9 @@ namespace SpojeNet\AbraFlexiIpex;
 use Ease\Mailer;
 use Ease\Shared;
 
-require_once '../vendor/autoload.php';
+\define('APP_NAME', 'IPEXPrepaid');
 
-\define('EASE_APPNAME', 'IPEXPrepaid');
+require_once '../vendor/autoload.php';
 
 /**
  * Get today's Statements list.

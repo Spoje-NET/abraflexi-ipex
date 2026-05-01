@@ -904,7 +904,6 @@ class Ipex extends \Ease\Sand
         ) ? $pdfFilename : '';
     }
 
-
     /**
      * Send CallList by mail.
      *

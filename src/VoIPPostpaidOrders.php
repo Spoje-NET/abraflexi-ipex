@@ -17,8 +17,10 @@ namespace SpojeNet\AbraFlexiIpex;
 
 use Ease\Shared;
 
+\define('APP_NAME', 'IPEXPostPaidOrders');
+
 require_once '../vendor/autoload.php';
-\define('EASE_APPNAME', 'IPEXPostPaidOrders');
+
 $exitcode = 0;
 /**
  * Get today's Statements list.
@@ -51,7 +53,6 @@ $monthOffset = isset($options['monthOffset']) ? (int) $options['monthOffset'] :
 if ($monthOffset > 0) {
     $monthOffset = -$monthOffset;
 }
-
 
 if (\array_key_exists('continue', $options) || \array_key_exists('c', $options)) {
     // Find the last generated order and set the next period

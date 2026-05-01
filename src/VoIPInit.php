@@ -24,6 +24,7 @@ use Ease\Shared;
 \define('APP_NAME', 'AbraFlexiIpexInit');
 
 require_once '../vendor/autoload.php';
+
 $options = getopt('o::e::', ['output::environment::']);
 Shared::init(
     [
