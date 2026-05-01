@@ -199,7 +199,7 @@ For Linux, .deb packages are available. Please use the repo:
 
 ```shell
     echo "deb http://repo.vitexsoftware.com $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/vitexsoftware.list
-    sudo wget -O /etc/apt/trusted.gpg.d/vitexsoftware.gpg http://repo.vitexsoftware.cz/keyring.gpg
+    sudo wget -O /etc/apt/trusted.gpg.d/vitexsoftware.gpg http://repo.vitexsoftware.cz/KEY.gpg
     sudo apt update
     sudo apt install abraflexi-ipex
 ```

@@ -5,5 +5,5 @@ debian/tmp/composer.json	usr/share/php/abraflexi-ipex
 src/AbraFlexiIpex/*.php		usr/share/php/abraflexi-ipex
 bin/*                           usr/bin/
 .env.example                    usr/share/doc/abraflexi-ipex
-#io.github.spoje_net.abraflexi_ipex.metainfo.xml /usr/share/metainfo/
+debian/net.spoje.abraflexi_ipex.metainfo.xml /usr/share/metainfo/
 abraflexi-ipex.svg              usr/share/icons/hicolor/scalable/apps/

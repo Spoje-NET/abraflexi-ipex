@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>net.spoje.abraflexi_ipex</id>
+  
+  <name>Ipex ⛗ AbraFlexi integration</name>
+  <summary>The abraflexi-ipex project integrates Ipex, a VoIP service, with AbraFlexi, an economic ERP system. </summary>
+  
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  
+  <description>
+    <p>
+      <em> Generate AbraFlexi Orders from Ipex Calls &amp; send Call List to customer </em> Generate AbraFlexi Invoices from AbraFlexi orders when amount reach threshold <em> Send pre-paid Call list to customer </em> Enhanced Audit Reporting with comprehensive transaction tracking <em> MultiFlexi Report Schema compliance for standardized integration </em> Duplicate Prevention for orders and invoices <em> Any-time Execution with proper period-specific processing </em> Detailed Metrics and status reporting for compliance
+      </p>
+  </description>
+    
+  <icon type="stock">abraflexi-ipex</icon>
+    
+  <categories>
+   <category>Office</category>
+   <category>Finance</category>
+  </categories>
+    
+  <provides>
+      <binary>abraflexi-ipex-postpaid-invoices</binary>
+      <binary>abraflexi-ipex-postpaid-orders</binary>
+      <binary>abraflexi-ipex-prepaid</binary>
+      <binary>abraflexi-ipex-setup</binary>
+  </provides>
+</component>
