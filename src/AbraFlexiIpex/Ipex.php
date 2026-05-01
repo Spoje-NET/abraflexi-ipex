@@ -694,7 +694,7 @@ class Ipex extends \Ease\Sand
      *
      * @param array<string, string> $invoiceRaw
      *
-     * @return \SpojeNet\AbraFlexiIpex\FakturaVydana
+     * @return \AbraFlexi\ObjednavkaPrijata
      */
     public function createOrder(array $invoiceRaw)
     {
@@ -900,50 +900,10 @@ class Ipex extends \Ease\Sand
 
         return file_put_contents(
             $pdfFilename,
-            $this->pdfCallLog($ipexCustomerID, $pdfFilename, $offset),
+            $this->pdfCallLog($ipexCustomerID, $customerName, $offset),
         ) ? $pdfFilename : '';
     }
 
-    /**
-     * Add call log as items to the given order.
-     *
-     * @param FakturaVydana $order      the order to add call log items to
-     * @param int           $customerId the raw invoice data containing customerId
-     */
-    public function addCallLogAsItems($order, array $customerId): void
-    {
-        $caller = new \IPEXB2B\Calls();
-
-        // Use the target period for call retrieval
-        $calls = $caller->getCallsForCustomer(
-            $this->since ?? new \DateTime('first day of last month'),
-            $customerId,
-        );
-
-        $callsByNumber = [];
-
-        if ($calls) {
-            foreach ($calls as $callsData) {
-                $callsByNumber[$callsData['cislo_int']][] = $callsData;
-            }
-
-            foreach ($callsByNumber as $internalNumber => $numberCalls) {
-                $order->addArrayToBranch(['typPolozkyK' => 'typPolozky.text', 'nazev' => '======================== '.$internalNumber.' ========================']);
-
-                foreach ($numberCalls as $callsData) {
-                    $pricelistItem = [
-                        'typPolozkyK' => 'typPolozky.text',
-                        'nazev' => trim($callsData['cislo_ext'].' , '.$callsData['destinace'].' , '.$callsData['stav'].' , '.str_replace(
-                            '00:00:00',
-                            '',
-                            $callsData['datetime'].' , '.$callsData['cena'].' Kč',
-                        )),
-                    ];
-                    $order->addArrayToBranch($pricelistItem);
-                }
-            }
-        }
-    }
 
     /**
      * Send CallList by mail.
@@ -1063,7 +1023,9 @@ class Ipex extends \Ease\Sand
                 \AbraFlexi\Priloha::addAttachmentFromFile($invoice, $this->savePdfCallLog($ipexCustomerID, $invoice->getDataValue('firma')->showAs, \count($callsOrders)));
             }
 
-            $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
+            if (strtolower(\Ease\Shared::cfg('ABRAFLEXI_SEND', 'false')) === 'true') {
+                $invoice->insertToAbraFlexi(['id' => $invoice, 'stavMailK' => 'stavMail.odeslat']);
+            }
 
             $orderHelper = $this->getOrderer();
 

@@ -61,12 +61,9 @@ foreach ($invoicesRaw as $invoiceRaw) {
 
         $caller = new \IPEXB2B\Calls();
 
-        $startDate = new \DateTime();
-        $startDate->modify('-1 month');
-        $now = new \DateTime();
         $calls = $caller->getCallsForCustomer($startDate, (int) $invoiceRaw['customerId']);
 
-        $range = $startDate->format('m/d/Y').' - '.$now->format('m/d/Y');
+        $range = $startDate->format('m/d/Y').' - '.$endDate->format('m/d/Y');
 
         // Calculate total amount from calls
         $totalAmount = 0;
@@ -103,7 +100,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
             ]);
             $html2pdf->setDefaultFont('Helvetica');
             $html2pdf->writeHTML((string) $report);
-            $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$now->format('Y-m-d').'.pdf';
+            $pdfFilename = $mpdfTmpDir.'/'.$invoiceRaw['customerId'].'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$endDate->format('Y-m-d').'.pdf';
 
             $html2pdf->Output($pdfFilename, \Mpdf\Output\Destination::FILE);
 

@@ -52,8 +52,6 @@ if ($monthOffset > 0) {
     $monthOffset = -$monthOffset;
 }
 
-$dateFrom = $options['dateFrom'] ?? ($options['f'] ?? null);
-$dateTo = $options['dateTo'] ?? ($options['t'] ?? null);
 
 if (\array_key_exists('continue', $options) || \array_key_exists('c', $options)) {
     // Find the last generated order and set the next period
@@ -94,9 +92,5 @@ if (Shared::cfg('APP_DEBUG', false) || Shared::cfg('EASE_LOGGER', '') === 'conso
 $multiFlexiReport = $ipexer->generateMultiFlexiReport($report, 'orders', $exitcode);
 $written = file_put_contents($destination, json_encode($multiFlexiReport, \JSON_PRETTY_PRINT));
 $ipexer->addStatusMessage(sprintf('MultiFlexi report saved to %s', $destination), $written ? 'success' : 'error');
-
-// Generate standard detailed audit report
-$written = file_put_contents($destination, json_encode($report, Shared::cfg('DEBUG') ? \JSON_PRETTY_PRINT : 0));
-$ipexer->addStatusMessage(sprintf(_('Saving result to %s'), $destination), $written ? 'success' : 'error');
 
 exit($exitcode);
