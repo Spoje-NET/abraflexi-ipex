@@ -12,23 +12,24 @@ PKG_SOURCE  := $(shell jq -r '.name' composer.json)
 	dh $@
 
 override_dh_install:
+	mkdir -p debian/tmp
+	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  composer.json |sponge debian/tmp/composer.json
 	dh_install
 	sed -i -e 's/..\/i18n/\/usr\/share\/locale/g' debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
 	sed -i "s|require_once '../vendor/autoload.php';|require_once '/usr/share/php/abraflexi-ipex/autoload.php';|" \
 	    debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
 	sed -i -e 's/\.\.\/.env//g'  debian/abraflexi-ipex/usr/share/abraflexi-ipex/*.php
 	install -D -m 0644 debian/autoload.php debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
-	sed -i "1a defined('APP_NAME') || define('APP_NAME', '$(PKG_SOURCE)');" \
-		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	sed -i "s|'unknown'|'$(PKG_SOURCE)'|" \
 		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	sed -i "s|'0.0.0'|'$(PKG_VERSION)'|" \
 		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
-	sed -i "2a defined('APP_VERSION') || define('APP_VERSION', '$(PKG_VERSION)');" \
+	sed -i "3a defined('APP_NAME') || define('APP_NAME', '$(PKG_SOURCE)');" \
+		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
+	sed -i "4a defined('APP_VERSION') || define('APP_VERSION', '$(PKG_VERSION)');" \
 		debian/abraflexi-ipex/usr/share/php/abraflexi-ipex/autoload.php
 	install -m0755 -d debian/abraflexi-ipex/usr/share/pkg-php-tools/autoloaders
 	echo 'spojenet abraflexi-ipex abraflexi-ipex/autoload.php' > debian/abraflexi-ipex/usr/share/pkg-php-tools/autoloaders/abraflexi-ipex
-	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//' `'"'  debian/composer.json |sponge debian/abraflexi-ipex/usr/lib/abraflexi-ipex/composer.json
 	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-postpaid-invoices.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-postpaid-invoices.multiflexi.app.json
 	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-postpaid-orders.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-postpaid-orders.multiflexi.app.json
 	jq '.version = "'`dpkg-parsechangelog | sed -n 's/^Version: //p'| sed 's/~.*//'`'"'  multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json |sponge debian/multiflexi-abraflexi-ipex/usr/lib/abraflexi-ipex/multiflexi/abraflexi-ipex-prepaid.multiflexi.app.json

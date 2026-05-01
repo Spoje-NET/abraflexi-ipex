@@ -20,3 +20,4 @@ composer.phar
 /debian/abraflexi-ipex.debhelper.log
 /.phpunit.cache/
 /.phpunit.result.cache
+debian/tmp/composer.json

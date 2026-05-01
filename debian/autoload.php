@@ -13,7 +13,7 @@ require_once '/usr/share/php/mpdf/autoload.php';
 // PSR-4 autoloader for SpojeNet\AbraFlexiIpex namespace
 spl_autoload_register(function (string $class): void {
     $prefix = 'SpojeNet\\AbraFlexiIpex\\';
-    $baseDir = '/usr/lib/abraflexi-ipex/AbraFlexiIpex/';
+    $baseDir = '/usr/share/php/abraflexi-ipex/';
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
         return;

@@ -755,12 +755,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Spoje-NET/php-abraflexi.git",
-                "reference": "812c1249ed6c632d8bb2da386faeb9ae6c667dcc"
+                "reference": "08b8c3ef62f5dd6cb11a7d70d27d7b6ca0c4c7b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Spoje-NET/php-abraflexi/zipball/812c1249ed6c632d8bb2da386faeb9ae6c667dcc",
-                "reference": "812c1249ed6c632d8bb2da386faeb9ae6c667dcc",
+                "url": "https://api.github.com/repos/Spoje-NET/php-abraflexi/zipball/08b8c3ef62f5dd6cb11a7d70d27d7b6ca0c4c7b4",
+                "reference": "08b8c3ef62f5dd6cb11a7d70d27d7b6ca0c4c7b4",
                 "shasum": ""
             },
             "require": {
@@ -808,7 +808,7 @@
                 "issues": "https://github.com/Spoje-NET/php-abraflexi/issues",
                 "source": "https://github.com/Spoje-NET/php-abraflexi/tree/main"
             },
-            "time": "2026-04-28T16:11:15+00:00"
+            "time": "2026-05-01T19:18:11+00:00"
         },
         {
             "name": "spojenet/ipexb2b",
