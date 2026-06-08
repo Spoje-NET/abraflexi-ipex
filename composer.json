@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=8.2",
-        "mpdf/mpdf": "^8.2",
+        "mpdf/mpdf": "^8.3",
         "spojenet/flexibee": "dev-main",
         "spojenet/ipexb2b": "dev-main",
         "vitexsoftware/ease-html": "^1.40"
