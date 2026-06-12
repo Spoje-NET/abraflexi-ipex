@@ -893,8 +893,8 @@ class Ipex extends \Ease\Sand
         }
 
         $pdfFilename = sys_get_temp_dir().'/'.urlencode(str_replace(
-            ' ',
-            '_',
+            [' ', ':'],
+            ['_', ''],
             \Ease\Functions::rip($customerName),
         )).'_'._('Calls').'_'.$startDate->format('Y-m-d').'_'.$endDate->format('Y-m-d').'.pdf';
 
