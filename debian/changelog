@@ -1,8 +1,15 @@
-abraflexi-ipex (1.2.2) UNRELEASED; urgency=medium
+abraflexi-ipex (1.2.3) UNRELEASED; urgency=medium
 
+  * Allow to specify ABRAFLEXI_ACCOUNTING type for new invoices
+
+ -- Vitex <vitezslav.dvorak@spojenet.cz>  Fri, 12 Jun 2026 19:13:50 +0200
+
+abraflexi-ipex (1.2.2) unstable; urgency=medium
+
+  [ vitex ]
   * Install layout update
 
- -- vitex <info@vitexsoftware.cz>  Fri, 01 May 2026 22:29:50 +0200
+ -- Vitex <vitezslav.dvorak@spojenet.cz>  Fri, 12 Jun 2026 19:12:50 +0200
 
 abraflexi-ipex (1.2.1) unstable; urgency=medium
 
