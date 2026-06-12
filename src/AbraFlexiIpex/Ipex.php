@@ -967,7 +967,10 @@ class Ipex extends \Ease\Sand
 
         $invoice->setDataValue('stavMailK', strtolower(\Ease\Shared::cfg('ABRAFLEXI_SEND', 'false')) === 'true' ? 'stavMail.odeslat' : 'stavMail.neodesilat');
         $invoice->setDataValue('firma', \AbraFlexi\Code::ensure($customerExtId));
-        $invoice->setDataValue('typUcOp', \AbraFlexi\Code::ensure('TRŽBA SLUŽBY INT'));
+
+        if (\Ease\Shared::cfg('ABRAFLEXI_ACCOUNTING')) {
+            $invoice->setDataValue('typUcOp', \AbraFlexi\Code::ensure(\Ease\Shared::cfg('ABRAFLEXI_ACCOUNTING')));
+        }
 
         $this->since = clone $periodSince;
         $this->until = clone $periodUntil;

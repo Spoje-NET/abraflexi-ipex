@@ -161,6 +161,16 @@
       "required": true,
       "category": "API"
     },
+    "ABRAFLEXI_ACCOUNTING": {
+      "type": "string",
+      "description": {
+        "en": "AbraFlexi accounting type",
+        "cs": "Typ účetní operace AbraFlexi"
+      },
+      "defval": "code:TRŽBA SLUŽBY INT",
+      "required": false,
+      "category": "API"
+    },
     "ABRAFLEXI_SKIPLIST": {
       "type": "string",
       "description": {
