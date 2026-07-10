@@ -42,17 +42,30 @@ jobs:
         import os
         import glob
 
-        # Download the schema
-        schema_url = "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json"
-        response = requests.get(schema_url)
-        schema = response.json()
+        # Download schemas — file naming picks which schema applies:
+        #   *.multiflexi.app.json           -> schema/application.json
+        #   *.multiflexi.crdprototype.json  -> schema/credential-prototype.json
+        base_url = "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/schema"
+        schemas = {}
+        for suffix, schema_file in (
+            (".multiflexi.app.json", "application.json"),
+            (".multiflexi.crdprototype.json", "credential-prototype.json"),
+        ):
+            response = requests.get(f"{base_url}/{schema_file}")
+            response.raise_for_status()
+            schemas[suffix] = response.json()
 
         # Validate all JSON files
         for file_path in glob.glob("multiflexi/*.json"):
+            schema = next((s for suffix, s in schemas.items() if file_path.endswith(suffix)), None)
+            if schema is None:
+                print(f"⚠️ {file_path} does not match any known MultiFlexi file suffix, skipping")
+                continue
+
             print(f"Validating schema: {file_path}")
             with open(file_path, 'r') as f:
                 data = json.load(f)
-            
+
             try:
                 jsonschema.validate(data, schema)
                 print(f"✅ {file_path} is valid")
