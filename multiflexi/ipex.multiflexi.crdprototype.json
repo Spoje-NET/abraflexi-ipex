@@ -7,6 +7,7 @@
   "type": "credential",
   "code": "Ipex",
   "uuid": "9070d1dc-8dba-40ed-8aab-211a6babcb9e",
+  "logo": "9070d1dc-8dba-40ed-8aab-211a6babcb9e.svg",
   "fields": [
     {
       "keyword": "IPEX_URL",
