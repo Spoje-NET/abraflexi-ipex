@@ -10,9 +10,9 @@ Vcs-Git: https://github.com/Spoje-NET/abraflexi-ipex.git
 Vcs-Browser: https://github.com/Spoje-NET/abraflexi-ipex
 
 Package: abraflexi-ipex
-Architecture: any
+Architecture: all
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}, php-spojenet-ipex-b2b, php-vitexsoftware-ease-html, php-spojenet-abraflexi (>= 3.4), php-mpdf
+Depends: ${misc:Depends}, php-spojenet-ipex-b2b, php-vitexsoftware-ease-html, php-spojenet-abraflexi (>= 3.4), php-mpdf
 Description: Ipex ⛗ AbraFlexi integration
  Create Invoices for Pepaid & Postpaid Ipex calls in AbraFlexi
 
