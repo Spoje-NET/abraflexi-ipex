@@ -10,7 +10,7 @@ String[] distributions = [
 			//                 // Re-enable once the stack builds cleanly for Forky.
 			'ubuntu:jammy',
 			'ubuntu:noble',
-			'ubuntu:resolute',
+			// 'ubuntu:resolute', // Disabled: repo.vitexsoftware.com has no resolute packages yet (php-mpdf, php-spojenet-ipex-b2b).
 ]
 
 String vendor = 'vitexsoftware'
