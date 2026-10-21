@@ -37,6 +37,7 @@ Aby se nevystavovaly zbytečně malé faktury, integrace používá konfigurovat
 - Pokud je součet pod nebo roven limitu, do výsledku se zapíše např. `123.45 < 200` a faktura se nyní nevytvoří.
 - Pokud kód zákazníka (podřetězcově) figuruje v `ABRAFLEXI_SKIPLIST`, fakturace se přeskočí bez ohledu na částku.
 - `ABRAFLEXI_CREATE_EMPTY_ORDERS` umožní evidenčně vytvořit i nulové objednávky (např. pro přiložení výpisu hovorů a sledování zpracování měsíce).
+- Opakované spuštění úlohy je bezpečné: před vytvořením se hledá objednávka podle zákazníka, typu dokladu a intervalu `datTermin`/`datReal`. Pokud období už pokrývá, nová objednávka se nevytvoří.
 
 ### Přesný mechanismus pro 0 Kč objednávky
 

@@ -55,7 +55,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
 
     if ($adresar->recordExists($klientExtID)) {
         $adresar->loadFromAbraFlexi($klientExtID);
-        $email = $adresar->getEmail();
+        $email = Ipex::uniqueEmailRecipients((string) $adresar->getEmail());
         $startDate = \IPEXB2B\ApiClient::ipexDateTimeToDateTime($invoiceRaw['dateStart']);
         $endDate = \IPEXB2B\ApiClient::ipexDateTimeToDateTime($invoiceRaw['dateEnd']);
 
@@ -86,7 +86,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
 
         $mailSent = false;
 
-        if ($sendByEmail) {
+        if ($sendByEmail && $email !== '') {
             $mpdfTmpDir = sys_get_temp_dir().'/mpdf';
 
             if (!file_exists($mpdfTmpDir)) {
@@ -113,6 +113,8 @@ foreach ($invoicesRaw as $invoiceRaw) {
             $mailSent = $postman->send();
 
             unlink($pdfFilename);
+        } elseif ($sendByEmail && $email === '') {
+            $grabber->addStatusMessage(sprintf(_('Customer %s without email address ?!?'), $klientExtID), 'warning');
         } else {
             $grabber->addStatusMessage('PDF call list generation skipped (email sending disabled)', 'info');
         }

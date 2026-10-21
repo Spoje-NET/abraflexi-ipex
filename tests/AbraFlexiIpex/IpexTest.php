@@ -105,6 +105,104 @@ class IpexTest extends TestCase
     }
 
     /**
+     * @covers \SpojeNet\AbraFlexiIpex\Ipex::normalizeServicePeriod
+     */
+    public function testNormalizeServicePeriod(): void
+    {
+        [$since, $until] = Ipex::normalizeServicePeriod(
+            new \DateTime('2025-08-31 00:00:00'),
+            new \DateTime('2025-09-30 23:59:59'),
+        );
+
+        $this->assertSame('2025-09-01', $since->format('Y-m-d'));
+        $this->assertSame('2025-09-30', $until->format('Y-m-d'));
+    }
+
+    /**
+     * @covers \SpojeNet\AbraFlexiIpex\Ipex::periodCoversRequired
+     */
+    public function testPeriodCoversRequired(): void
+    {
+        $this->assertTrue(Ipex::periodCoversRequired(
+            new \DateTime('2025-09-01'),
+            new \DateTime('2025-09-30'),
+            new \DateTime('2025-09-01'),
+            new \DateTime('2025-09-30'),
+        ));
+
+        $this->assertTrue(Ipex::periodCoversRequired(
+            new \DateTime('2025-09-01'),
+            new \DateTime('2025-09-30'),
+            new \DateTime('2025-09-05'),
+            new \DateTime('2025-09-20'),
+        ));
+
+        $this->assertFalse(Ipex::periodCoversRequired(
+            new \DateTime('2025-09-02'),
+            new \DateTime('2025-09-30'),
+            new \DateTime('2025-09-01'),
+            new \DateTime('2025-09-30'),
+        ));
+    }
+
+    /**
+     * @covers \SpojeNet\AbraFlexiIpex\Ipex::periodDescriptionMatches
+     */
+    public function testPeriodDescriptionMatches(): void
+    {
+        $start = new \DateTime('2025-09-01');
+        $end = new \DateTime('2025-09-30');
+
+        $this->assertTrue(Ipex::periodDescriptionMatches(
+            'Telefonní služby od 01.09.2025 do 30.09.2025',
+            $start,
+            $end,
+        ));
+
+        $this->assertTrue(Ipex::periodDescriptionMatches(
+            'Telefonní služby od 09. 01. 2025 do 09. 30. 2025',
+            $start,
+            $end,
+        ));
+
+        $this->assertFalse(Ipex::periodDescriptionMatches(
+            'Telefonní služby od 01.08.2025 do 31.08.2025',
+            $start,
+            $end,
+        ));
+    }
+
+    /**
+     * @covers \SpojeNet\AbraFlexiIpex\Ipex::uniqueEmailRecipients
+     */
+    public function testUniqueEmailRecipients(): void
+    {
+        $this->assertSame(
+            'a@example.com,b@example.com',
+            Ipex::uniqueEmailRecipients('a@example.com, a@example.com; b@example.com a@example.com'),
+        );
+
+        $this->assertSame('', Ipex::uniqueEmailRecipients(' , ; '));
+    }
+
+    /**
+     * @covers \SpojeNet\AbraFlexiIpex\Ipex::resolveRequiredPeriod
+     */
+    public function testResolveRequiredPeriodPrefersConfiguredWindow(): void
+    {
+        $this->object->since = new \DateTime('2025-09-01');
+        $this->object->until = new \DateTime('2025-09-30');
+
+        [$since, $until] = $this->object->resolveRequiredPeriod(
+            new \DateTime('2025-08-31'),
+            new \DateTime('2025-09-30'),
+        );
+
+        $this->assertSame('2025-09-01', $since->format('Y-m-d'));
+        $this->assertSame('2025-09-30', $until->format('Y-m-d'));
+    }
+
+    /**
      * @covers \SpojeNet\AbraFlexiIpex\IPEX::pdfCallLog
      */
     public function testPdfCallLog(): void

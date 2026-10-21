@@ -101,39 +101,51 @@ class Ipex extends \Ease\Sand
     /**
      * Check if order already exists for given customer and date range.
      *
+     * Looks up by customer + order type, then verifies period coverage using the
+     * service interval on the order (datTermin/datReal), not datVyst. Falls back
+     * to popis text for legacy records. Safe to re-run the job hourly/daily.
+     *
      * @param string    $customerExtId External customer ID
-     * @param \DateTime $startDate     Start date of the period
-     * @param \DateTime $endDate       End date of the period
+     * @param \DateTime $startDate     Start date of the period (IPEX dateStart)
+     * @param \DateTime $endDate       End date of the period (IPEX dateEnd)
      *
      * @return bool True if order exists, false otherwise
      */
     public function orderExistsForPeriod(string $customerExtId, \DateTime $startDate, \DateTime $endDate): bool
     {
+        [$requiredSince, $requiredUntil] = $this->resolveRequiredPeriod($startDate, $endDate);
+
         $orderer = $this->getOrderer();
-        $orderer->defaultUrlParams['order'] = 'datVyst@A';
+        $orderer->defaultUrlParams['order'] = 'datTermin@A';
         $orderer->defaultUrlParams['limit'] = 0;
 
         $conds = [
             'storno' => false,
-            'firma' => $customerExtId,
+            'firma' => \AbraFlexi\Code::ensure($customerExtId),
             'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP'),
-            // Check for orders that overlap with the period
-            'datVyst' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
         ];
 
         $existingOrders = $orderer->getColumnsFromAbraFlexi(
-            ['kod', 'datVyst', 'popis'],
+            ['kod', 'datVyst', 'datTermin', 'datReal', 'popis'],
             $conds,
             'id',
         );
 
         if ($orderer->lastResponseCode === 200 && !empty($existingOrders)) {
-            // Check if any existing order covers the same period by examining the description
             foreach ($existingOrders as $order) {
+                $orderSince = self::toDateTime($order['datTermin'] ?? null);
+                $orderUntil = self::toDateTime($order['datReal'] ?? null);
+
+                if ($orderSince instanceof \DateTime && $orderUntil instanceof \DateTime) {
+                    if (self::periodCoversRequired($orderSince, $orderUntil, $requiredSince, $requiredUntil)) {
+                        return true;
+                    }
+                }
+
+                // Legacy fallback: match dates embedded in popis (incl. MM. DD. YYYY).
                 $popis = $order['popis'] ?? '';
 
-                // Keep backward compatibility with legacy MM.DD.YYYY records.
-                if (self::periodDescriptionMatches($popis, $startDate, $endDate)) {
+                if (self::periodDescriptionMatches($popis, $requiredSince, $requiredUntil)) {
                     return true;
                 }
             }
@@ -153,16 +165,16 @@ class Ipex extends \Ease\Sand
      */
     public function invoiceExistsForPeriod(string $customerExtId, \DateTime $startDate, \DateTime $endDate): bool
     {
+        [$requiredSince, $requiredUntil] = $this->resolveRequiredPeriod($startDate, $endDate);
+
         $invoicer = $this->getInvoicer();
         $invoicer->defaultUrlParams['order'] = 'datVyst@A';
         $invoicer->defaultUrlParams['limit'] = 0;
 
         $conds = [
             'storno' => false,
-            'firma' => $customerExtId,
+            'firma' => \AbraFlexi\Code::ensure($customerExtId),
             'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_DOCTYPE', \AbraFlexi\Code::ensure('FAKTURA')),
-            // Check for invoices in the target month
-            'datVyst' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
         ];
 
         $existingInvoices = $invoicer->getColumnsFromAbraFlexi(
@@ -172,18 +184,91 @@ class Ipex extends \Ease\Sand
         );
 
         if ($invoicer->lastResponseCode === 200 && !empty($existingInvoices)) {
-            // Check if any existing invoice covers the same period by examining the description
             foreach ($existingInvoices as $invoice) {
                 $popis = $invoice['popis'] ?? '';
 
-                // Keep backward compatibility with legacy MM.DD.YYYY records.
-                if (self::periodDescriptionMatches($popis, $startDate, $endDate)) {
+                if (self::periodDescriptionMatches($popis, $requiredSince, $requiredUntil)) {
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Resolve the billing period that must be covered by an existing order/invoice.
+     *
+     * Prefers the configured target window ($this->since/$this->until) so the rule
+     * is driven by the requested period, not hard-coded month math. Otherwise
+     * normalizes IPEX dateStart/dateEnd the same way createOrder stores datTermin/datReal.
+     *
+     * @return array{0:\DateTime, 1:\DateTime}
+     */
+    public function resolveRequiredPeriod(\DateTime $startDate, \DateTime $endDate): array
+    {
+        if (isset($this->since, $this->until)) {
+            $since = clone $this->since;
+            $until = clone $this->until;
+            $since->setTime(0, 0, 0);
+            $until->setTime(0, 0, 0);
+
+            return [$since, $until];
+        }
+
+        return self::normalizeServicePeriod($startDate, $endDate);
+    }
+
+    /**
+     * Normalize IPEX service dates to the interval stored on AbraFlexi orders.
+     *
+     * IPEX periods can start at midnight on the last day of the previous month;
+     * createOrder stores datTermin as dateStart + 1 day and datReal as dateEnd.
+     *
+     * @return array{0:\DateTime, 1:\DateTime}
+     */
+    public static function normalizeServicePeriod(\DateTime $startDate, \DateTime $endDate): array
+    {
+        $orderSince = (clone $startDate)->modify('+1 day');
+        $orderSince->setTime(0, 0, 0);
+        $orderUntil = clone $endDate;
+        $orderUntil->setTime(0, 0, 0);
+
+        return [$orderSince, $orderUntil];
+    }
+
+    /**
+     * Whether an order/invoice interval fully covers the required billing period.
+     */
+    public static function periodCoversRequired(
+        \DateTime $orderSince,
+        \DateTime $orderUntil,
+        \DateTime $requiredSince,
+        \DateTime $requiredUntil,
+    ): bool {
+        return $orderSince->format('Y-m-d') <= $requiredSince->format('Y-m-d')
+            && $orderUntil->format('Y-m-d') >= $requiredUntil->format('Y-m-d');
+    }
+
+    /**
+     * Deduplicate comma/semicolon/whitespace-separated email recipients.
+     */
+    public static function uniqueEmailRecipients(string $recipients): string
+    {
+        $parts = preg_split('/[\s,;]+/', $recipients, -1, \PREG_SPLIT_NO_EMPTY) ?: [];
+        $unique = [];
+
+        foreach ($parts as $email) {
+            $trimmed = trim($email);
+
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $unique[strtolower($trimmed)] = $trimmed;
+        }
+
+        return implode(',', $unique);
     }
 
     /**
@@ -713,14 +798,16 @@ class Ipex extends \Ease\Sand
             return $this->getOrderer();
         }
 
+        [$serviceSince, $serviceUntil] = self::normalizeServicePeriod($startDate, $endDate);
+
         $order = $this->getOrderer([
             'typDokl' => \Ease\Shared::cfg('ABRAFLEXI_ORDERTYPE', 'code:OBP_VOIP'),
             'stavUzivK' => 'stavDoklObch.pripraveno',
             'zaokrNaSumK' => 'zaokrNa.zadne',
             'zaokrNaDphK' => 'zaokrNa.zadne',
-            'datVyst' => isset($this->since) ? $this->since->format('Y-m-d') : $startDate->format('Y-m-d'), // Set order date to beginning of target month
-            'datTermin' => (clone $startDate)->modify('+1 day')->format('Y-m-d'),
-            'datReal' => $endDate->format('Y-m-d'),
+            'datVyst' => isset($this->since) ? $this->since->format('Y-m-d') : $serviceSince->format('Y-m-d'),
+            'datTermin' => $serviceSince->format('Y-m-d'),
+            'datReal' => $serviceUntil->format('Y-m-d'),
             'popis' => _('IPEX Postpaid'),
         ]);
 
@@ -917,7 +1004,17 @@ class Ipex extends \Ease\Sand
         $callLogFilename
     ): bool {
         $sent = false;
-        $recipient = $order->getEmail();
+        $rawRecipients = '';
+
+        if (method_exists($order, 'getRecipients')) {
+            $rawRecipients = (string) $order->getRecipients('Obj');
+        }
+
+        if ($rawRecipients === '') {
+            $rawRecipients = (string) $order->getEmail();
+        }
+
+        $recipient = self::uniqueEmailRecipients($rawRecipients);
 
         if ($recipient) {
             $mailer = new Mailer(

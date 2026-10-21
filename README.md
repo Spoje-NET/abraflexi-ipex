@@ -33,7 +33,7 @@ The `abraflexi-ipex` project integrates [Ipex](https://www.ipex.cz/), a VoIP ser
 - **Send pre-paid Call list** to customer
 - **Enhanced Audit Reporting** with comprehensive transaction tracking
 - **MultiFlexi Report Schema** compliance for standardized integration
-- **Duplicate Prevention** for orders and invoices
+- **Duplicate Prevention** for orders and invoices (customer + order type + service interval `datTermin`/`datReal`; safe to re-run hourly/daily)
 - **Any-time Execution** with proper period-specific processing
 - **Detailed Metrics** and status reporting for compliance
 
