@@ -62,10 +62,16 @@ class IpexTest extends TestCase
     public function testGetUnivoicedCalls(): void
     {
         $allCalls = $this->object->getUnivoicedCalls();
-        $this->assertIsArray($allCalls);
+
+        foreach ($allCalls as $call) {
+            $this->assertArrayHasKey('sumCelkem', $call);
+        }
 
         $onlyOneUserCalls = $this->object->getUnivoicedCalls('code:666');
-        $this->assertIsArray($onlyOneUserCalls);
+
+        foreach ($onlyOneUserCalls as $call) {
+            $this->assertArrayHasKey('sumCelkem', $call);
+        }
     }
 
     /**
@@ -252,7 +258,7 @@ class IpexTest extends TestCase
      */
     public function testGetInvoicer(): void
     {
-        $this->assertIsObject($this->object->getInvoicer());
+        $this->assertInstanceOf(\AbraFlexi\FakturaVydana::class, $this->object->getInvoicer());
     }
 
     /**

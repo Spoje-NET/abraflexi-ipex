@@ -113,7 +113,7 @@ foreach ($invoicesRaw as $invoiceRaw) {
             $mailSent = $postman->send();
 
             unlink($pdfFilename);
-        } elseif ($sendByEmail && $email === '') {
+        } elseif ($sendByEmail) {
             $grabber->addStatusMessage(sprintf(_('Customer %s without email address ?!?'), $klientExtID), 'warning');
         } else {
             $grabber->addStatusMessage('PDF call list generation skipped (email sending disabled)', 'info');
