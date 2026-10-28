@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
+- **Empty call-list PDFs**: IPEX customers sharing one `externId` (visible + hidden duplicate) no longer collide — the visible one is used. Call lists are also filtered to the target period and a warning is logged when none are found.
 - **Idempotent postpaid orders**: Duplicate detection now matches by customer + order type and verifies full period coverage via `datTermin`/`datReal` (not `datVyst` / raw IPEX `dateStart`). Re-runs skip months that are already covered.
 - **Duplicate email recipients**: Call-list and prepaid mails deduplicate To addresses before sending.
 
