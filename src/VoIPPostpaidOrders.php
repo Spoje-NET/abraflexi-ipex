@@ -60,16 +60,9 @@ if (\array_key_exists('continue', $options) || \array_key_exists('c', $options))
     $lastOrderDate = $ipexer->getLastOrderDate();
 
     if ($lastOrderDate) {
-        // If $lastOrderDate is a DateTime object, convert to string
-        if ($lastOrderDate instanceof \DateTimeInterface) {
-            $lastOrderDateStr = $lastOrderDate->format('Y-m-d');
-        } else {
-            $lastOrderDateStr = (string) $lastOrderDate;
-        }
-
-        $lastOrder = new \DateTime($lastOrderDateStr);
+        $lastOrder = $lastOrderDate;
         $now = new \DateTime();
-        $monthOffset = -1 * (($now->format('Y') - $lastOrder->format('Y')) * 12 + ($now->format('n') - $lastOrder->format('n')));
+        $monthOffset = -1 * (((int) $now->format('Y') - (int) $lastOrder->format('Y')) * 12 + ((int) $now->format('n') - (int) $lastOrder->format('n')));
 
         // Ensure at least -1 month offset
         if ($monthOffset > -1) {

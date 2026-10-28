@@ -84,7 +84,7 @@ class Ipex extends \Ease\Sand
                 $dateValue = $order['datVyst'];
 
                 if ($dateValue instanceof \AbraFlexi\Date) {
-                    $dateValue = method_exists($dateValue, 'format') ? $dateValue->format('Y-m-d H:i:s') : (string) $dateValue;
+                    $dateValue = $dateValue->format('Y-m-d H:i:s');
                 }
 
                 $orderDate = new \DateTime((string) $dateValue);
@@ -284,8 +284,8 @@ class Ipex extends \Ease\Sand
      * - Filters API results to specific target month only
      * - Handles timezone conversion for accurate date comparisons
      *
-     * @param array $periodOptions Options array with 'monthOffset' key (default: -1)
-     *                             monthOffset should be negative for past months
+     * @param array<string, int> $periodOptions Options array with 'monthOffset' key (default: -1)
+     *                                          monthOffset should be negative for past months
      *
      * @return array<int, array<string, string>>|bool Array of filtered invoice data or false on error
      */
@@ -501,7 +501,7 @@ class Ipex extends \Ease\Sand
                     'customerName' => $customerName,
                     'price' => $price,
                     'period' => $startDate->format('Y-m-d').' to '.$endDate->format('Y-m-d'),
-                    'reason' => $price === 0 ? 'Zero amount' : 'No calls',
+                    'reason' => $price === 0.0 ? 'Zero amount' : 'No calls',
                 ];
             }
         }
@@ -520,7 +520,7 @@ class Ipex extends \Ease\Sand
     /**
      * Process AbraFlexi Orders to AbraFlexi Invoices.
      *
-     * @return array<string, array> Enhanced result with detailed audit information
+     * @return array<string, array<string, mixed>> Enhanced result with detailed audit information
      */
     public function processIpexPostpaidInvoices(): array
     {
@@ -563,7 +563,7 @@ class Ipex extends \Ease\Sand
                 ++$summary['processedCount'];
                 $customerCode = \AbraFlexi\Code::strip($customer);
                 $uninvoicedAmount = $this->uninvoicedAmount($calls);
-                $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode ?? $customer;
+                $customerName = $this->ipexUsers[$customer]['name'] ?? $customerCode;
                 [$customerSince, $customerUntil] = self::determineInvoicePeriod($calls);
 
                 $result[$customer] = [
@@ -802,10 +802,8 @@ class Ipex extends \Ease\Sand
 
     /**
      * @param string $klientExtID
-     *
-     * @return string
      */
-    public function foundLastInvoice($klientExtID)
+    public function foundLastInvoice($klientExtID): ?int
     {
         return $this->getInvoicer()->getPrevRecordID(['firma' => $klientExtID]);
     }
@@ -813,7 +811,7 @@ class Ipex extends \Ease\Sand
     /**
      * Count Given Orders Total.
      *
-     * @param array $ordersData
+     * @param array<int|string, array<string, mixed>> $ordersData
      */
     public function uninvoicedAmount($ordersData): float
     {
@@ -935,12 +933,12 @@ class Ipex extends \Ease\Sand
         return $order;
     }
 
-    public static function formatDate($dateTime)
+    public static function formatDate(\DateTimeInterface $dateTime): string
     {
         return $dateTime->format('d.m.Y');
     }
 
-    public static function formatDateLegacy($dateTime)
+    public static function formatDateLegacy(\DateTimeInterface $dateTime): string
     {
         return $dateTime->format('m. d. Y');
     }
@@ -1050,8 +1048,8 @@ class Ipex extends \Ease\Sand
     /**
      * Send CallList by mail.
      *
-     * @param \AbraFlexi\ObjednavkaVydana $order
-     * @param string                      $callLogFilename PDF File path
+     * @param \AbraFlexi\ObjednavkaPrijata|\AbraFlexi\ObjednavkaVydana $order
+     * @param string                                                   $callLogFilename PDF File path
      *
      * @return bool send status
      */
@@ -1060,11 +1058,7 @@ class Ipex extends \Ease\Sand
         $callLogFilename
     ): bool {
         $sent = false;
-        $rawRecipients = '';
-
-        if (method_exists($order, 'getRecipients')) {
-            $rawRecipients = (string) $order->getRecipients('Obj');
-        }
+        $rawRecipients = $order->getRecipients('Obj');
 
         if ($rawRecipients === '') {
             $rawRecipients = (string) $order->getEmail();
@@ -1240,8 +1234,8 @@ class Ipex extends \Ease\Sand
     /**
      * Display audit summary for orders or invoices.
      *
-     * @param array  $report The report array with _audit section
-     * @param string $type   Type of report ('orders' or 'invoices')
+     * @param array<string, mixed> $report The report array with _audit section
+     * @param string               $type   Type of report ('orders' or 'invoices')
      */
     public function displayAuditSummary(array $report, string $type = 'orders'): void
     {
@@ -1326,11 +1320,11 @@ class Ipex extends \Ease\Sand
     /**
      * Generate MultiFlexi-compliant report from audit data.
      *
-     * @param array  $report   The detailed audit report
-     * @param string $type     Type of operation ('orders' or 'invoices')
-     * @param int    $exitCode Exit code from the operation
+     * @param array<string, mixed> $report   The detailed audit report
+     * @param string               $type     Type of operation ('orders' or 'invoices')
+     * @param int                  $exitCode Exit code from the operation
      *
-     * @return array MultiFlexi-compliant report structure
+     * @return array<string, mixed> MultiFlexi-compliant report structure
      */
     public function generateMultiFlexiReport(array $report, string $type = 'orders', int $exitCode = 0): array
     {
