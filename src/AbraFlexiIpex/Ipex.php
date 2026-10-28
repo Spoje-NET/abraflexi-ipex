@@ -340,13 +340,65 @@ class Ipex extends \Ease\Sand
     /**
      * Obtain Customer List.
      *
-     * @return array<int, array<string, string>>
+     * @return array<string, array<string, mixed>>
      */
     public function getIpexCustomersByExtCode()
     {
         $customers = new \IPEXB2B\Customers();
 
-        return \Ease\Functions::reindexArrayBy($customers->requestData(), 'externId');
+        return self::indexCustomersByExtId((array) $customers->requestData());
+    }
+
+    /**
+     * Index IPEX customers by externId; hidden duplicates never win over visible ones.
+     *
+     * @param array<int, array<string, mixed>> $customers
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function indexCustomersByExtId(array $customers): array
+    {
+        $indexed = [];
+
+        foreach ($customers as $customer) {
+            $extId = (string) ($customer['externId'] ?? '');
+
+            if (isset($indexed[$extId])) {
+                $current = $indexed[$extId];
+                $currentRank = [empty($current['hidden']) ? 1 : 0, (int) ($current['numberCount'] ?? 0)];
+                $candidateRank = [empty($customer['hidden']) ? 1 : 0, (int) ($customer['numberCount'] ?? 0)];
+
+                if ($candidateRank <= $currentRank) {
+                    continue;
+                }
+            }
+
+            $indexed[$extId] = $customer;
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * Keep only calls started within the given period (API returns everything since dateFrom).
+     *
+     * @param array<int, array<string, mixed>>|bool $calls
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function filterCallsByPeriod($calls, \DateTime $since, \DateTime $until): array
+    {
+        if (!\is_array($calls)) {
+            return [];
+        }
+
+        $from = $since->format('Y-m-d 00:00:00');
+        $to = $until->format('Y-m-d 23:59:59');
+
+        return array_values(array_filter(
+            $calls,
+            static fn (array $call): bool => isset($call['datetime']) && (string) $call['datetime'] >= $from && (string) $call['datetime'] <= $to,
+        ));
     }
 
     /**
@@ -932,7 +984,11 @@ class Ipex extends \Ease\Sand
             $endDate->modify('last day of this month');
         }
 
-        $calls = $caller->getCallsForCustomer($startDate, $ipexCustomerID);
+        $calls = self::filterCallsByPeriod($caller->getCallsForCustomer($startDate, $ipexCustomerID), $startDate, $endDate);
+
+        if ($calls === []) {
+            $this->addStatusMessage(sprintf(_('No calls found for IPEX customer %d in period %s - %s'), $ipexCustomerID, self::formatDate($startDate), self::formatDate($endDate)), 'warning');
+        }
 
         $report = new \Ease\Container(new \Ease\Html\H2Tag(_('Calls listing')));
         $report->addItem(new \Ease\Html\PTag(self::formatDate($startDate).' - '.self::formatDate($endDate)));

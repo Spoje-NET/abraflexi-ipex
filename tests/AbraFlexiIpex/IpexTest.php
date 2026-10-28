@@ -254,4 +254,34 @@ class IpexTest extends TestCase
     {
         $this->assertIsObject($this->object->getInvoicer());
     }
+
+    /**
+     * Hidden duplicate IPEX customer must not shadow the visible one.
+     */
+    public function testIndexCustomersByExtIdPrefersVisible(): void
+    {
+        $indexed = Ipex::indexCustomersByExtId([
+            ['id' => 34207, 'externId' => 'code:01284', 'hidden' => false, 'numberCount' => 8],
+            ['id' => 32569, 'externId' => 'code:01284', 'hidden' => true, 'numberCount' => 0],
+            ['id' => 1, 'externId' => 'code:00001', 'hidden' => false, 'numberCount' => 1],
+        ]);
+
+        $this->assertSame(34207, $indexed['code:01284']['id']);
+        $this->assertSame(1, $indexed['code:00001']['id']);
+    }
+
+    public function testFilterCallsByPeriod(): void
+    {
+        $calls = [
+            ['datetime' => '2026-04-30 23:59:59'],
+            ['datetime' => '2026-05-01 00:00:00'],
+            ['datetime' => '2026-05-31 12:00:00'],
+            ['datetime' => '2026-06-01 00:00:00'],
+        ];
+
+        $filtered = Ipex::filterCallsByPeriod($calls, new \DateTime('2026-05-01'), new \DateTime('2026-05-31'));
+
+        $this->assertCount(2, $filtered);
+        $this->assertSame([], Ipex::filterCallsByPeriod(false, new \DateTime('2026-05-01'), new \DateTime('2026-05-31')));
+    }
 }

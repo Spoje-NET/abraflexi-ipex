@@ -1,7 +1,3 @@
-# phpstan.neon
-parameters:
-    type_coverage:
-        return: 50
-        param: 35.5
-        property: 70
-        constant: 85
+# Auto-discovered by a bare `phpstan analyse`; keep in sync with `make static-code-analysis`.
+includes:
+    - phpstan-default.neon.dist
